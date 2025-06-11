@@ -18,10 +18,12 @@ public class BlogDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     {
         base.OnModelCreating(builder);
 
+        // сраный Identity создаёт какие-то ограничения внешнего ключа, что может привести к появлению циклов или множественных каскадных путей
+        // обошёл вот таким костылём
         builder.Entity<User>()
-        .HasMany(u => u.Articles)
-        .WithOne(a => a.Author)
-        .OnDelete(DeleteBehavior.Restrict);
+            .HasMany(u => u.Articles)
+            .WithOne(a => a.Author)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Entity<User>()
             .HasMany(u => u.Comments)
