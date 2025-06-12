@@ -47,4 +47,9 @@ public class BlogDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 
         builder.Entity<ArticleTag>().HasKey(at => new { at.ArticleId, at.TagId });
     }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder options)
+    {
+        options.UseSqlite(b => b.MigrationsAssembly("MyBestBlog.Web"));
+    }
 }

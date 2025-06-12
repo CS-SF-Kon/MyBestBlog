@@ -26,7 +26,10 @@ namespace MyBestBlog.Web
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-            builder.Services.AddDbContext<BlogDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<BlogDbContext>(options => { 
+                options.UseSqlite("Data Source=myapp.db");
+                options.UseSqlite(b => b.MigrationsAssembly("MyBestBlog.Web"));
+            });
 
             var app = builder.Build();
 
