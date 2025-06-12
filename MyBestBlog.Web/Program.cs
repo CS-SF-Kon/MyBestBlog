@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MyBestBlog.Core.Entities;
+using MyBestBlog.Core.Interfaces;
 using MyBestBlog.Infrastructure.Data;
+using MyBestBlog.Infrastructure.Repositories;
 using MyBestBlog.Services.Implementations;
 using MyBestBlog.Services.Interfaces;
 
@@ -20,10 +22,32 @@ namespace MyBestBlog.Web
                 .AddDefaultTokenProviders();
 
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+            builder.Services.AddScoped<ITagRepository, TagRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
 
             builder.Services.AddDbContext<BlogDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
+
+            var logger = app.Services.GetRequiredService<ILogger<Program>>(); // полное логгирование 
+            foreach (var svc in builder.Services)
+            {
+                logger.LogInformation($"Service: {svc.ServiceType.FullName}");
+            }
+
+            //using (var scope = app.Services.CreateScope()) // была проблема с ArticleRepository и ArticleController, проверял
+            //{
+            //    try
+            //    {
+            //        var repo = scope.ServiceProvider.GetRequiredService<IArticleRepository>();
+            //        Console.WriteLine("ArticleRepository успешно разрешён!"); 
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Console.WriteLine($"Ошибка: {ex.Message}");
+            //    }
+            //}
 
             if (!app.Environment.IsDevelopment())
             {
@@ -42,18 +66,31 @@ namespace MyBestBlog.Web
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
+            app.MapControllerRoute(
+                name: "auth",
+                pattern: "auth/{action=Login}",
+                defaults: new { controller = "Auth" });
+
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}");
+
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
-                db.Database.Migrate();
+                db.Database.Migrate(); // реализованы миграции на случай дополнения БД
             }
 
-            using (var scope = app.Services.CreateScope())
+            using (var scope = app.Services.CreateScope()) // доабвление тестовых пользователей Админ, Модератор и Тестовый Пользователь
             {
                 var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
-                var roles = new[] { "User", "Moderator", "Admin" };
+                var articleRepo = scope.ServiceProvider.GetRequiredService<IArticleRepository>();
+                var tagRepo = scope.ServiceProvider.GetRequiredService<ITagRepository>();
+                var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+
+                var roles = new[] { "User", "Moderator", "Admin" }; // три роли
                 foreach (var role in roles)
                 {
                     if (!await roleManager.RoleExistsAsync(role))
@@ -77,7 +114,7 @@ namespace MyBestBlog.Web
                     await authService.RegisterAsync(
                         email: testUserEmail,
                         password: testUserPassword);
-                    // роль тестовому пользователю вручную создавать не будем, она по умолчанию должна стать User
+                    // роль тестовому пользователю должна будет стать User умолчанию, как и всем регистрирующимся
                 }
 
                 var moderatorEmail = "moderator@example.com";
@@ -88,6 +125,24 @@ namespace MyBestBlog.Web
                         email: moderatorEmail,
                         password: moderatorPassword,
                         role: "Moderator");
+                }
+
+                if (!await articleRepo.AnyAsync())
+                {
+                    var admin = await userRepo.GetUserByUserEmailAsync(adminEmail);
+                    var testTag = new Tag { Name = "ASP.NET Core", Description = "Статьи по ASP.NET" };
+
+                    await tagRepo.AddAsync(testTag);
+
+                    var testArticle = new Article
+                    {
+                        Title = "Первая тестовая статья",
+                        Content = "Это содержимое тестовой статьи...",
+                        AuthorId = admin.Id,
+                        Tags = new List<ArticleTag> { new() { Tag = testTag } }
+                    };
+
+                    await articleRepo.AddAsync(testArticle);
                 }
             }
 

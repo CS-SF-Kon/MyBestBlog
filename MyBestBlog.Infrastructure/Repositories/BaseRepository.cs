@@ -17,17 +17,18 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity> where TEnti
     public virtual async Task AddAsync(TEntity entity)
     {
         await _context.Set<TEntity>().AddAsync(entity);
+        await _context.SaveChangesAsync();
     }
 
     public virtual async Task UpdateAsync(TEntity entity)
     {
         _context.Set<TEntity>().Update(entity);
-        await Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 
     public virtual async Task DeleteAsync(TEntity entity)
     {
         _context.Set<TEntity>().Remove(entity);
-        await Task.CompletedTask;
+        await _context.SaveChangesAsync();
     }
 }

@@ -3,21 +3,21 @@
 public interface IRepository<TEntity> where TEntity : class
 {
     /// <summary>
-    /// create (register) User, Article, Comment, Tag
+    /// создать (зарегистрировать) Пользователя, Статью, Комментарий, Тег
     /// </summary>
     /// <param name="entity"></param>
     /// <returns></returns>
     Task AddAsync(TEntity entity);
 
     /// <summary>
-    /// edit User, Article, Comment, Tag
+    /// изменить Пользователя, Статью, Комментарий, Тег
     /// </summary>
     /// <param name="entity"></param>
     /// <returns></returns>
     Task UpdateAsync(TEntity entity);
 
     /// <summary>
-    /// delete User, Article, Comment, Tag
+    /// удалить Пользователя, Статью, Комментарий, Тег
     /// </summary>
     /// <param name="entity"></param>
     /// <returns></returns>

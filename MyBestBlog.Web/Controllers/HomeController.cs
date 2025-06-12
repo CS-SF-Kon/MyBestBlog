@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MyBestBlog.Core.Interfaces;
+using MyBestBlog.Infrastructure.Data;
 using MyBestBlog.Web.Models;
 using System.Diagnostics;
 
@@ -7,21 +10,27 @@ namespace MyBestBlog.Web.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IArticleRepository _articleRepo;
+        private readonly BlogDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IArticleRepository articleRepo, BlogDbContext context)
         {
             _logger = logger;
+            _articleRepo = articleRepo;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var articles = await _articleRepo.GetAllArticlesAsync(); // получить перечень существующих Статей для вывод на главной странице
+
+            return View(articles);
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+        //public IActionResult Privacy() - можно будет удалить, наверное
+        //{
+        //    return View();
+        //}
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

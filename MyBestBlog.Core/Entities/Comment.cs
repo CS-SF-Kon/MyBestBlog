@@ -1,7 +1,7 @@
 ﻿namespace MyBestBlog.Core.Entities;
 
 /// <summary>
-/// Comments for articles class
+/// класс Комменатриев к Статьям
 /// </summary>
 public class Comment
 {

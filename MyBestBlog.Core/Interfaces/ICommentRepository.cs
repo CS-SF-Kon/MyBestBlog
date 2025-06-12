@@ -5,13 +5,13 @@ namespace MyBestBlog.Core.Interfaces;
 public interface ICommentRepository : IRepository<Comment>
 {
     /// <summary>
-    /// get all Comments
+    /// получить все Комментарии
     /// </summary>
     /// <returns></returns>
     Task<IEnumerable<Comment>> GetAllCommentsAsync();
 
     /// <summary>
-    /// get Comment by it's Id
+    /// получить Комментарий по его Id
     /// </summary>
     /// <param name="commentId"></param>
     /// <returns></returns>

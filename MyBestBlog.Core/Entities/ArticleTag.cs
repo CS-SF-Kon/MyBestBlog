@@ -1,7 +1,7 @@
 ﻿namespace MyBestBlog.Core.Entities;
 
 /// <summary>
-/// Article-Tag junction class
+/// класс для связывания Статей и Тегов
 /// </summary>
 public class ArticleTag
 {

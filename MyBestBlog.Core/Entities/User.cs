@@ -3,7 +3,7 @@
 namespace MyBestBlog.Core.Entities;
 
 /// <summary>
-/// User class
+/// класс Пользователя Блога
 /// </summary>
 public class User : IdentityUser<Guid>
 {

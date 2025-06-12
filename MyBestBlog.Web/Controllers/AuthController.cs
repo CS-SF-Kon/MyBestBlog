@@ -1,0 +1,116 @@
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using MyBestBlog.Core.Entities;
+using MyBestBlog.Services.Interfaces;
+using System.Security.Claims;
+
+public class AuthController : Controller
+{
+    private readonly IAuthService _authService;
+    private readonly UserManager<User> _userManager;
+    private readonly SignInManager<User> _signInManager;
+
+    public AuthController(
+        IAuthService authService,
+        UserManager<User> userManager,
+        SignInManager<User> signInManager)
+    {
+        _authService = authService;
+        _userManager = userManager;
+        _signInManager = signInManager;
+    }
+
+    [HttpGet]
+    public IActionResult Login(string? returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(
+        string email,
+        string password,
+        string? returnUrl = null)
+    {
+        ViewData["ReturnUrl"] = returnUrl;
+
+        if (ModelState.IsValid)
+        {
+            var result = await _signInManager.PasswordSignInAsync(
+                email, password, isPersistent: false, lockoutOnFailure: false);
+
+            if (result.Succeeded)
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                await AddUserRolesToClaims(user);
+
+                return LocalRedirect(returnUrl ?? "/");
+            }
+
+            ModelState.AddModelError(string.Empty, "Неверный email или пароль");
+        }
+
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult Register()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(
+        string email,
+        string password,
+        string confirmPassword)
+    {
+        if (password != confirmPassword)
+        {
+            ModelState.AddModelError("confirmPassword", "Пароли не совпадают");
+            return View();
+        }
+
+        var result = await _authService.RegisterAsync(email, password);
+
+        if (result.Succeeded)
+        {
+            await _signInManager.PasswordSignInAsync(
+                email, password, isPersistent: false, lockoutOnFailure: false);
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        return RedirectToAction("Index", "Home");
+    }
+
+    private async Task AddUserRolesToClaims(User user)
+    {
+        var claims = new List<Claim>();
+        var roles = await _userManager.GetRolesAsync(user);
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        await _userManager.AddClaimsAsync(user, claims);
+    }
+}

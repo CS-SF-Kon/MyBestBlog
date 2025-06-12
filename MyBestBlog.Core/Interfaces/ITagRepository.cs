@@ -5,14 +5,14 @@ namespace MyBestBlog.Core.Interfaces;
 public interface ITagRepository: IRepository<Tag>
 {
     /// <summary>
-    /// get Tag by it's Id
+    /// получить Тег по его Id
     /// </summary>
     /// <param name="tagId"></param>
     /// <returns></returns>
     Task<Tag?> GetTagByTagIdAsync(Guid tagId);
 
     /// <summary>
-    /// get all Tags
+    /// получить все Теги
     /// </summary>
     /// <returns></returns>
     Task<IEnumerable<Tag?>> GetAllTagsAsync();

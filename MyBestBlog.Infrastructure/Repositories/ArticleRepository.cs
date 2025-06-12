@@ -5,13 +5,23 @@ using MyBestBlog.Infrastructure.Data;
 
 namespace MyBestBlog.Infrastructure.Repositories;
 
-public class ArticleRepostory : BaseRepository<Article>, IArticleRepositiry
+public class ArticleRepository : BaseRepository<Article>, IArticleRepository
 {
-    public ArticleRepostory(BlogDbContext context) : base(context) { }
+    public ArticleRepository(BlogDbContext context) : base(context) { }
+
+    public async Task<bool> AnyAsync()
+    {
+        return await _context.Articles.AnyAsync();
+    }
 
     public async Task<IEnumerable<Article>> GetAllArticlesAsync()
     {
         return await _context.Set<Article>().ToListAsync();
+    }
+
+    public async Task<Article?> GetArticleByArticleIdAsync(Guid articleId)
+    {
+        return await _context.Set<Article>().FindAsync(articleId);
     }
 
     public async Task<IEnumerable<Article>> GetArticlesByUserIdAsync(Guid userId)

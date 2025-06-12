@@ -1,7 +1,7 @@
 ﻿namespace MyBestBlog.Core.Entities;
 
 /// <summary>
-/// Tags for articles class
+/// класс Тегов к Статьям
 /// </summary>
 public class Tag
 {

@@ -1,8 +1,43 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using MyBestBlog.Core.Entities
+@model List<Article>
+
+@{
+    ViewData["Title"] = "Главная";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+    <h1 class="mb-4">Последние статьи</h1>
+    
+    @if (Model?.Any() == true)
+    {
+        foreach (var article in Model)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">@article.Title</h5>
+                    <div class="mb-2">
+                        @foreach (var tag in article.Tags)
+                        {
+                            <span class="badge bg-primary">@tag.Tag.Name</span>
+                        }
+                    </div>
+                    <a asp-controller="Article" asp-action="Details" asp-route-id="@article.Id" 
+                       class="btn btn-primary">Читать</a>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
+                    {
+                        <form asp-controller="Article" asp-action="Delete" asp-route-id="@article.Id"
+                              method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Статьи пока не добавлены
+        </div>
+    }
 </div>
