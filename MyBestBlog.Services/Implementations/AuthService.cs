@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Storage.Json;
 using MyBestBlog.Core.Entities;
 using MyBestBlog.Services.Interfaces;
 
@@ -15,14 +16,14 @@ public class AuthService : IAuthService
         _signInManager = signInManager;
     }
 
-    public async Task<IdentityResult> RegisterAsync(string email, string password)
+    public async Task<IdentityResult> RegisterAsync(string email, string password, string? role = null)
     {
         var user = new User { UserName = email, Email = email };
         var result = await _userManager.CreateAsync(user, password);
 
         if (result.Succeeded)
         {
-            await _userManager.AddToRoleAsync(user, "User");
+            await _userManager.AddToRoleAsync(user, role ?? "User");
         }
 
         return result;
@@ -34,5 +35,14 @@ public class AuthService : IAuthService
             email, password, isPersistent: false, lockoutOnFailure: false);
 
         return result.Succeeded;
+    }
+
+    public async Task<bool> EmailAlreadyExists(string email)
+    {
+        if (await _userManager.FindByEmailAsync(email) == null)
+        {
+            return false;
+        }
+        return true;
     }
 }

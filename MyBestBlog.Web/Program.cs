@@ -50,11 +50,10 @@ namespace MyBestBlog.Web
 
             using (var scope = app.Services.CreateScope())
             {
+                var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
                 var roles = new[] { "User", "Moderator", "Admin" };
-
                 foreach (var role in roles)
                 {
                     if (!await roleManager.RoleExistsAsync(role))
@@ -62,21 +61,34 @@ namespace MyBestBlog.Web
                 }
 
                 var adminEmail = "admin@example.com";
-                if (await userManager.FindByEmailAsync(adminEmail) == null)
+                var adminPassword = "Admin123!";
+                if (!await authService.EmailAlreadyExists(adminEmail))
                 {
-                    var admin = new User { UserName = adminEmail, Email = adminEmail };
-                    await userManager.CreateAsync(admin, "Admin123!");
-                    await userManager.AddToRoleAsync(admin, "Admin");
+                    await authService.RegisterAsync(
+                        email: adminEmail,
+                        password: adminPassword,
+                        role: "Admin");
                 }
 
-                var testUser = new User
+                var testUserEmail = "testUser@example.com";
+                var testUserPassword = "TestUser123!";
+                if (!await authService.EmailAlreadyExists(testUserEmail))
                 {
-                    UserName = "test@example.com",
-                    Email = "test@example.com",
-                    DisplayName = "Test User"
-                };
+                    await authService.RegisterAsync(
+                        email: testUserEmail,
+                        password: testUserPassword);
+                    // роль тестовому пользователю вручную создавать не будем, она по умолчанию должна стать User
+                }
 
-                await userManager.CreateAsync(testUser, "Test123!");
+                var moderatorEmail = "moderator@example.com";
+                var moderatorPassword = "Moder123!";
+                if (!await authService.EmailAlreadyExists(moderatorEmail))
+                {
+                    await authService.RegisterAsync(
+                        email: moderatorEmail,
+                        password: moderatorPassword,
+                        role: "Moderator");
+                }
             }
 
             app.Run();
