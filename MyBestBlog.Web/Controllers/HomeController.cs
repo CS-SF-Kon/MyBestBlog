@@ -5,37 +5,36 @@ using MyBestBlog.Infrastructure.Data;
 using MyBestBlog.Web.Models;
 using System.Diagnostics;
 
-namespace MyBestBlog.Web.Controllers
+namespace MyBestBlog.Web.Controllers;
+
+public class HomeController : Controller
 {
-    public class HomeController : Controller
+    private readonly ILogger<HomeController> _logger;
+    private readonly IArticleRepository _articleRepo;
+    private readonly BlogDbContext _context;
+
+    public HomeController(ILogger<HomeController> logger, IArticleRepository articleRepo, BlogDbContext context)
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly IArticleRepository _articleRepo;
-        private readonly BlogDbContext _context;
+        _logger = logger;
+        _articleRepo = articleRepo;
+        _context = context;
+    }
 
-        public HomeController(ILogger<HomeController> logger, IArticleRepository articleRepo, BlogDbContext context)
-        {
-            _logger = logger;
-            _articleRepo = articleRepo;
-            _context = context;
-        }
+    public async Task<IActionResult> Index()
+    {
+        var articles = await _articleRepo.GetAllArticlesAsync(); // получить перечень существующих Статей для вывод на главной странице
 
-        public async Task<IActionResult> Index()
-        {
-            var articles = await _articleRepo.GetAllArticlesAsync(); // получить перечень существующих Статей для вывод на главной странице
+        return View(articles);
+    }
 
-            return View(articles);
-        }
+    //public IActionResult Privacy() - можно будет удалить, наверное
+    //{
+    //    return View();
+    //}
 
-        //public IActionResult Privacy() - можно будет удалить, наверное
-        //{
-        //    return View();
-        //}
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

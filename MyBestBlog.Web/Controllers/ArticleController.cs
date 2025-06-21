@@ -6,6 +6,8 @@ using MyBestBlog.Infrastructure.Repositories;
 using MyBestBlog.Services.Interfaces;
 using System.Security.Claims;
 
+namespace MyBestBlog.Web.Controllers;
+
 [Authorize]
 public class ArticleController : Controller
 {

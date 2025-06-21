@@ -5,6 +5,8 @@ using MyBestBlog.Core.Entities;
 using MyBestBlog.Services.Interfaces;
 using System.Security.Claims;
 
+namespace MyBestBlog.Web.Controllers;
+
 public class AuthController : Controller
 {
     private readonly IAuthService _authService;
