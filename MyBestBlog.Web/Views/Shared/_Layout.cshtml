@@ -17,6 +17,13 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Статьи</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Users">Пользователи</a>
+                        </li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <a class="nav-link text-dark" asp-controller="Article" asp-action="Create">Создать статью</a>
+                        }
                     </ul>
                     <ul class="navbar-nav">
                         @if (User.Identity.IsAuthenticated)

@@ -1,0 +1,36 @@
+﻿@using MyBestBlog.Core.Entities
+@model List<User>
+
+@{
+    ViewData["Title"] = "Пользователи";
+}
+
+<div class="container">
+    <h1 class="mb-4">Последние статьи</h1>
+
+    @if (Model?.Any() == true)
+    {
+        foreach (var user in Model)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">@user.UserName</h5>
+                    <div class="mb-2">
+                        @foreach (var art in user.Articles)
+                        {
+                            <span class="badge bg-primary">@art.Title</span>
+                        }
+                    </div>
+                    <a asp-controller="User" asp-action="Details" asp-route-id="@user.Id"
+                       class="btn btn-primary">Читать статьи пользователя</a>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Пользователей пока нет
+        </div>
+    }
+</div>

@@ -8,6 +8,13 @@
 <div class="container">
     <h1 class="mb-4">Последние статьи</h1>
     
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="mb-4">
+            <a asp-controller="Article" asp-action="Create" class="btn btn-success">Новая статья</a>
+        </div>
+    }
+
     @if (Model?.Any() == true)
     {
         foreach (var article in Model)

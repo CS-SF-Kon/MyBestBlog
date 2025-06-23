@@ -5,6 +5,7 @@ using MyBestBlog.Core.Interfaces;
 using MyBestBlog.Infrastructure.Repositories;
 using MyBestBlog.Services.Interfaces;
 using System.Security.Claims;
+using MyBestBlog.Web.Models;
 
 namespace MyBestBlog.Web.Controllers;
 
@@ -12,10 +13,12 @@ namespace MyBestBlog.Web.Controllers;
 public class ArticleController : Controller
 {
     private readonly IArticleRepository _articleRepo;
+    private readonly ITagRepository _tagRepo;
 
-    public ArticleController(IArticleRepository articleRepo)
+    public ArticleController(IArticleRepository articleRepo, ITagRepository tagRepo)
     {
         _articleRepo = articleRepo;
+        _tagRepo = tagRepo;
     }
 
     /// <summary>
@@ -40,5 +43,43 @@ public class ArticleController : Controller
 
         await _articleRepo.DeleteAsync(article);
         return RedirectToAction("Index", "Home");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Create()
+    {
+        var tags = await _tagRepo.GetAllTagsAsync();
+        var model = new ArticleCreateViewModel
+        {
+            AvailableTags = tags.Select(t => new TagViewModel
+            {
+                Id = t.Id,
+                Name = t.Name
+            }).ToList()
+        };
+        return View(model);
+    }
+
+    public async Task<IActionResult> Create(ArticleCreateViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            model.AvailableTags = (List<TagViewModel>)await _tagRepo.GetAllTagsAsync();
+            return View(model);
+        }
+
+        var article = new Article
+        {
+            Title = model.Title,
+            Content = model.Content,
+            AuthorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)),
+            Tags = model.SelectedTagIds?.Select(tagId => new ArticleTag
+            {
+                TagId = tagId
+            }).ToList()
+        };
+
+        await _articleRepo.AddAsync(article);
+        return RedirectToAction("Details", new { id = article.Id });
     }
 }

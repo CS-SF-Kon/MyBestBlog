@@ -12,12 +12,14 @@ public class HomeController : Controller
     private readonly ILogger<HomeController> _logger;
     private readonly IArticleRepository _articleRepo;
     private readonly BlogDbContext _context;
+    private readonly IUserRepository _userRepo;
 
-    public HomeController(ILogger<HomeController> logger, IArticleRepository articleRepo, BlogDbContext context)
+    public HomeController(ILogger<HomeController> logger, IArticleRepository articleRepo, BlogDbContext context, IUserRepository userRepo)
     {
         _logger = logger;
         _articleRepo = articleRepo;
         _context = context;
+        _userRepo = userRepo;
     }
 
     public async Task<IActionResult> Index()
@@ -25,6 +27,12 @@ public class HomeController : Controller
         var articles = await _articleRepo.GetAllArticlesAsync(); // получить перечень существующих Статей для вывод на главной странице
 
         return View(articles);
+    }
+
+    public async Task<IActionResult> Users()
+    {
+        var users = await _userRepo.GetAllUsersAsync();
+        return View(users);
     }
 
     //public IActionResult Privacy() - можно будет удалить, наверное
