@@ -1,0 +1,47 @@
+﻿@model MyBestBlog.Web.Models.TagListViewModel
+
+@{
+    ViewData["Title"] = "Все теги";
+}
+
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
+
+    @if (Model.CanCreate)
+    {
+        <div class="mb-4">
+            <a asp-action="Create" class="btn btn-success">Создать тег</a>
+        </div>
+    }
+
+    @if (Model.Tags?.Any() == true)
+    {
+        <div class="row">
+            @foreach (var tag in Model.Tags)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <span class="badge bg-primary">@tag.Name</span>
+                            </h5>
+                            @if (!string.IsNullOrEmpty(tag.Description))
+                            {
+                                <p class="card-text">@tag.Description</p>
+                            }
+                            <small class="text-muted">
+                                Статей: @tag.Articles?.Count ?? 0
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">
+            Теги не найдены
+        </div>
+    }
+</div>

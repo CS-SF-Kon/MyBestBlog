@@ -20,6 +20,9 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Home" asp-action="Users">Пользователи</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-controller="Tag" asp-action="All">Теги</a>
+                        </li>
                         @if (User.Identity.IsAuthenticated)
                         {
                             <a class="nav-link text-dark" asp-controller="Article" asp-action="Create">Создать статью</a>

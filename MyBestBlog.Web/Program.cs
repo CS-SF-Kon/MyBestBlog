@@ -138,7 +138,7 @@ namespace MyBestBlog.Web
                     {
                         Title = "Первая тестовая статья",
                         Content = "Это содержимое тестовой статьи...",
-                        AuthorId = admin.Id,
+                        AuthorId = admin.Id, 
                         Tags = new List<ArticleTag> { new() { Tag = testTag } }
                     };
 
