@@ -1,12 +1,14 @@
-﻿@model MyBestBlog.Web.Models.ArticleCreateViewModel
+﻿@model ArticleCreateViewModel
 
 @{
-    ViewData["Title"] = "Новая статья";
+    ViewData["Title"] = "Редактирование статьи";
 }
 
 <h1>@ViewData["Title"]</h1>
 
-<form asp-action="Create" method="post">
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+
     <div class="form-group">
         <label asp-for="Title"></label>
         <input asp-for="Title" class="form-control" />
@@ -24,22 +26,14 @@
         <select asp-for="SelectedTagIds" multiple class="form-control">
             @foreach (var tag in Model.AvailableTags)
             {
-                <option value="@tag.Id">@tag.Name</option>
+                <option value="@tag.Id" selected="@(Model.SelectedTagIds?.Contains(tag.Id) == true)">
+                    @tag.Name
+                </option>
             }
         </select>
     </div>
 
-    <button type="submit" class="btn btn-primary">Опубликовать</button>
+    <button type="submit" class="btn btn-primary">
+        @(Model.Id == Guid.Empty ? "Создать" : "Сохранить")
+    </button>
 </form>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        $(document).ready(function() {
-            $('#SelectedTagIds').select2({
-                placeholder: "Выберите теги",
-                allowClear: true
-            });
-        });
-    </script>
-}

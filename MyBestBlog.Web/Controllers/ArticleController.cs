@@ -21,6 +21,18 @@ public class ArticleController : Controller
         _tagRepo = tagRepo;
     }
 
+    protected Guid GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (Guid.TryParse(userIdClaim, out var userId))
+        {
+            return userId;
+        }
+
+        throw new UnauthorizedAccessException("User ID is invalid or not found");
+    }
+
     /// <summary>
     /// удаление Статьи
     /// </summary>
@@ -81,5 +93,82 @@ public class ArticleController : Controller
 
         await _articleRepo.AddAsync(article);
         return RedirectToAction("Details", new { id = article.Id });
+    }
+
+    
+
+    [Authorize]
+    public async Task<IActionResult> Edit(Guid id)
+    {
+        var article = await _articleRepo.GetArticleByArticleIdAsync(id);
+        if (article == null) return NotFound();
+
+        if (!User.IsInRole("Admin") && !User.IsInRole("Moderator") && article.AuthorId != GetCurrentUserId())
+        {
+            return Forbid();
+        }
+
+        var model = new ArticleCreateViewModel
+        {
+            Id = article.Id,
+            Title = article.Title,
+            Content = article.Content,
+            SelectedTagIds = article.Tags?.Select(t => t.TagId).ToList(),
+            AvailableTags = (List<TagViewModel>)await _tagRepo.GetAllTagsAsync()
+        };
+        return View(model);
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> Edit(ArticleCreateViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            model.AvailableTags = (List<TagViewModel>)await _tagRepo.GetAllTagsAsync();
+            return View(model);
+        }
+
+        if (model.Id == Guid.Empty) 
+        {
+            var newArticle = new Article
+            {
+                Title = model.Title,
+                Content = model.Content,
+                AuthorId = GetCurrentUserId(),
+                Tags = model.SelectedTagIds?.Select(t => new ArticleTag { TagId = t }).ToList()
+            };
+            await _articleRepo.AddAsync(newArticle);
+        }
+        else
+        {
+            var article = await _articleRepo.GetArticleByArticleIdAsync(model.Id);
+            article.Title = model.Title;
+            article.Content = model.Content;
+            await _articleRepo.UpdateAsync(article);
+        }
+
+        return RedirectToAction("Details", new { id = model.Id });
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> Details(Guid id)
+    {
+        var article = await _articleRepo.GetArticleByArticleIdAsync(id);
+        if (article == null) return NotFound();
+
+        var isAuthorized = User.IsInRole("Admin") ||
+                          User.IsInRole("Moderator") ||
+                          article.AuthorId == GetCurrentUserId();
+
+        var model = new ArticleDetailsViewModel
+        {
+            Article = article,
+            CanEdit = isAuthorized,
+            CanDelete = isAuthorized
+        };
+
+        return View(model);
     }
 }

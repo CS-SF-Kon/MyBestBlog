@@ -4,6 +4,8 @@ namespace MyBestBlog.Web.Models;
 
 public class ArticleCreateViewModel
 {
+    public Guid Id { get; set; }
+
     [Required(ErrorMessage = "Заголовок обязателен")]
     [StringLength(100, ErrorMessage = "Не более 100 символов")]
     public string Title { get; set; }

@@ -4,6 +4,8 @@ namespace MyBestBlog.Web.Models;
 
 public class TagCreateViewModel
 {
+    public Guid Id { get; set; }
+
     [Required(ErrorMessage = "Название тега обязательно")]
     [StringLength(50, ErrorMessage = "Не более 50 символов")]
     public string Name { get; set; }

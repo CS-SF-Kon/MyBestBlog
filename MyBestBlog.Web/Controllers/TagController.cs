@@ -52,4 +52,43 @@ public class TagController : Controller
         await _tagRepo.AddAsync(tag);
         return RedirectToAction("All");
     }
+
+    [Authorize(Roles = "Admin,Moderator")]
+    public async Task<IActionResult> Edit(Guid? id)
+    {
+        if (id == null) // Создание
+        {
+            return View(new TagCreateViewModel());
+        }
+
+        var tag = await _tagRepo.GetTagByTagIdAsync(id.Value); // Редактирование
+        if (tag == null) return NotFound();
+
+        return View(new TagCreateViewModel
+        {
+            Id = tag.Id,
+            Name = tag.Name,
+            Description = tag.Description
+        });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Edit(TagCreateViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        if (model.Id == Guid.Empty) // Создание
+        {
+            await _tagRepo.AddAsync(new Tag { Name = model.Name, Description = model.Description });
+        }
+        else // Редактирование
+        {
+            var tag = await _tagRepo.GetTagByTagIdAsync(model.Id);
+            tag.Name = model.Name;
+            tag.Description = model.Description;
+            await _tagRepo.UpdateAsync(tag);
+        }
+
+        return RedirectToAction("All");
+    }
 }
