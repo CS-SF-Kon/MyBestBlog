@@ -1,0 +1,72 @@
+﻿@model MyBestBlog.Web.Models.UserProfileViewModel
+
+@{
+    ViewData["Title"] = $"Профиль {Model.DisplayName ?? Model.UserName}";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2>@Model.DisplayName</h2>
+                        @if (Model.CanEdit)
+                        {
+                            <a asp-controller="User" asp-action="Edit" asp-route-id="@Model.UserId"
+                               class="btn btn-sm btn-outline-primary">Редактировать информацию
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <span class="badge bg-secondary">@Model.Role</span>
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-5">Логин:</dt>
+                        <dd class="col-sm-7">@Model.UserName</dd>
+
+                        <dt class="col-sm-5">Email:</dt>
+                        <dd class="col-sm-7">@Model.Email</dd>
+
+                        <dt class="col-sm-5">Дата регистрации:</dt>
+                        <dd class="col-sm-7">@Model.RegistrationDate.ToString("dd.MM.yyyy")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <h3>Статьи пользователя</h3>
+
+            @if (Model.Articles.Any())
+            {
+                <div class="list-group">
+                    @foreach (var article in Model.Articles)
+                    {
+                        <a asp-controller="Article" asp-action="Details" asp-route-id="@article.Id"
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@article.Title</h5>
+                            </div>
+                            <div class="mt-2">
+                                @foreach (var tag in article.Tags)
+                                {
+                                    <span class="badge bg-primary me-1">@tag</span>
+                                }
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">
+                    Пользователь пока не создал статей
+                </div>
+            }
+        </div>
+    </div>
+</div>
