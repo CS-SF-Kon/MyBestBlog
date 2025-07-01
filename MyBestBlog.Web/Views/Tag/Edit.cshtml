@@ -1,12 +1,17 @@
 ﻿@model MyBestBlog.Web.Models.TagCreateViewModel
 
 @{
-    ViewData["Title"] = "Создание тега";
+    ViewData["Title"] = Model.Id == Guid.Empty ? "Создание тега" : "Редактирование тега";
 }
 
 <h1>@ViewData["Title"]</h1>
 
-<form asp-action="Create" method="post">
+<form asp-action="@(Model.Id == Guid.Empty ? "Create" : "Edit")" method="post">
+    @if (Model.Id != Guid.Empty)
+    {
+        <input type="hidden" asp-for="Id" />
+    }
+
     <div class="form-group mb-3">
         <label asp-for="Name"></label>
         <input asp-for="Name" class="form-control" />
@@ -19,7 +24,9 @@
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Создать</button>
+    <button type="submit" class="btn btn-primary">
+        @(Model.Id == Guid.Empty ? "Создать" : "Сохранить")
+    </button>
     <a asp-action="All" class="btn btn-secondary">Отмена</a>
 </form>
 

@@ -22,9 +22,21 @@
                 <div class="col-md-4 mb-3">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">
-                                <span class="badge bg-primary">@tag.Name</span>
-                            </h5>
+                            <div class="d-flex justify-content-between">
+                                <h5 class="card-title">
+                                    <a asp-controller="Home" asp-action="Index" asp-route-tagId="@tag.Id"
+                                       class="text-decoration-none">
+                                        <span class="badge bg-primary">@tag.Name</span>
+                                    </a>
+                                </h5>
+                                @if (Model.CanCreate)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@tag.Id"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil">Редактировать тег</i>
+                                    </a>
+                                }
+                            </div>
                             @if (!string.IsNullOrEmpty(tag.Description))
                             {
                                 <p class="card-text">@tag.Description</p>

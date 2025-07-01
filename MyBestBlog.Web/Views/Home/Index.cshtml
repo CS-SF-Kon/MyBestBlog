@@ -3,10 +3,24 @@
 
 @{
     ViewData["Title"] = "Главная";
+    var currentTag = ViewData["CurrentTag"] as Tag;
 }
 
 <div class="container">
-    <h1 class="mb-4">Последние статьи</h1>
+    <h1 class="mb-4">
+        @if (currentTag != null)
+        {
+            <span>Статьи с тегом: </span>
+            <span class="badge bg-primary">@currentTag.Name</span>
+            <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-2">
+                Показать все статьи
+            </a>
+        }
+        else
+        {
+            <span>Последние статьи</span>
+        }
+    </h1>
     
     @if (User.Identity.IsAuthenticated)
     {

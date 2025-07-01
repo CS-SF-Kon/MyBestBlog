@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MyBestBlog.Core.Entities;
 using MyBestBlog.Core.Interfaces;
 using MyBestBlog.Infrastructure.Data;
 using MyBestBlog.Web.Models;
@@ -22,9 +23,25 @@ public class HomeController : Controller
         _userRepo = userRepo;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(Guid? tagId)
     {
-        var articles = await _articleRepo.GetAllArticlesAsync(); // получить перечень существующих Статей для вывод на главной странице
+        List<Article> articles;
+
+        if (tagId.HasValue)
+        {
+            // Получаем статьи по тегу
+            articles = await _context.Articles
+                .Where(a => a.Tags.Any(t => t.TagId == tagId.Value))
+                .ToListAsync();
+
+            ViewData["CurrentTag"] = await _context.Tags
+                .FirstOrDefaultAsync(t => t.Id == tagId.Value);
+        }
+        else
+        {
+            // Получаем все статьи (оригинальная логика)
+            articles = (List<Article>)await _articleRepo.GetAllArticlesAsync();
+        }
 
         return View(articles);
     }

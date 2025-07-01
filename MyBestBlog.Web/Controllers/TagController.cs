@@ -30,7 +30,7 @@ public class TagController : Controller
     [Authorize(Roles = "Admin,Moderator")]
     public IActionResult Create()
     {
-        return View();
+        return View("Edit", new TagCreateViewModel());
     }
 
     [HttpPost]
@@ -56,12 +56,12 @@ public class TagController : Controller
     [Authorize(Roles = "Admin,Moderator")]
     public async Task<IActionResult> Edit(Guid? id)
     {
-        if (id == null) // Создание
+        if (id == null)
         {
             return View(new TagCreateViewModel());
         }
 
-        var tag = await _tagRepo.GetTagByTagIdAsync(id.Value); // Редактирование
+        var tag = await _tagRepo.GetTagByTagIdAsync(id.Value);
         if (tag == null) return NotFound();
 
         return View(new TagCreateViewModel
