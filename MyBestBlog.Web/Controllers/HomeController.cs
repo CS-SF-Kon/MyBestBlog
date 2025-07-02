@@ -31,6 +31,8 @@ public class HomeController : Controller
         {
             // Получаем статьи по тегу
             articles = await _context.Articles
+                .Include(a => a.Tags)
+                .ThenInclude(t => t.Tag)
                 .Where(a => a.Tags.Any(t => t.TagId == tagId.Value))
                 .ToListAsync();
 
@@ -40,7 +42,10 @@ public class HomeController : Controller
         else
         {
             // Получаем все статьи (оригинальная логика)
-            articles = (List<Article>)await _articleRepo.GetAllArticlesAsync();
+            articles = await _context.Articles
+                .Include(a => a.Tags)
+                .ThenInclude(t => t.Tag)
+                .ToListAsync();
         }
 
         return View(articles);

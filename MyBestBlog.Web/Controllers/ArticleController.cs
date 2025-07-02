@@ -76,7 +76,9 @@ public class ArticleController : Controller
     {
         if (!ModelState.IsValid)
         {
-            model.AvailableTags = (List<TagViewModel>)await _tagRepo.GetAllTagsAsync();
+            model.AvailableTags = (await _tagRepo.GetAllTagsAsync())
+                .Select(t => new TagViewModel { Id = t.Id, Name = t.Name })
+                .ToList();
             return View(model);
         }
 
@@ -84,7 +86,7 @@ public class ArticleController : Controller
         {
             Title = model.Title,
             Content = model.Content,
-            AuthorId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)),
+            AuthorId = GetCurrentUserId(),
             Tags = model.SelectedTagIds?.Select(tagId => new ArticleTag
             {
                 TagId = tagId
@@ -95,12 +97,10 @@ public class ArticleController : Controller
         return RedirectToAction("Details", new { id = article.Id });
     }
 
-    
-
     [Authorize]
     public async Task<IActionResult> Edit(Guid id)
     {
-        var article = await _articleRepo.GetArticleByArticleIdAsync(id);
+        var article = await _articleRepo.GetArticleByArticleIdAsync(id, includeTags: true);
         if (article == null) return NotFound();
 
         if (!User.IsInRole("Admin") && !User.IsInRole("Moderator") && article.AuthorId != GetCurrentUserId())
@@ -108,14 +108,21 @@ public class ArticleController : Controller
             return Forbid();
         }
 
+        var allTags = await _tagRepo.GetAllTagsAsync();
+
         var model = new ArticleCreateViewModel
         {
             Id = article.Id,
             Title = article.Title,
             Content = article.Content,
             SelectedTagIds = article.Tags?.Select(t => t.TagId).ToList(),
-            AvailableTags = (List<TagViewModel>)await _tagRepo.GetAllTagsAsync()
+            AvailableTags = allTags.Select(t => new TagViewModel
+            {
+                Id = t.Id,
+                Name = t.Name
+            }).ToList()
         };
+
         return View(model);
     }
 
@@ -125,29 +132,29 @@ public class ArticleController : Controller
     {
         if (!ModelState.IsValid)
         {
-            model.AvailableTags = (List<TagViewModel>)await _tagRepo.GetAllTagsAsync();
+            model.AvailableTags = (await _tagRepo.GetAllTagsAsync())
+                .Select(t => new TagViewModel { Id = t.Id, Name = t.Name })
+                .ToList();
             return View(model);
         }
 
-        if (model.Id == Guid.Empty) 
+        var article = await _articleRepo.GetArticleByArticleIdAsync(model.Id, includeTags: true);
+        if (article == null) return NotFound();
+
+        article.Title = model.Title;
+        article.Content = model.Content;
+
+        if (model.SelectedTagIds != null)
         {
-            var newArticle = new Article
+            article.Tags.Clear();
+
+            foreach (var tagId in model.SelectedTagIds)
             {
-                Title = model.Title,
-                Content = model.Content,
-                AuthorId = GetCurrentUserId(),
-                Tags = model.SelectedTagIds?.Select(t => new ArticleTag { TagId = t }).ToList()
-            };
-            await _articleRepo.AddAsync(newArticle);
-        }
-        else
-        {
-            var article = await _articleRepo.GetArticleByArticleIdAsync(model.Id);
-            article.Title = model.Title;
-            article.Content = model.Content;
-            await _articleRepo.UpdateAsync(article);
+                article.Tags.Add(new ArticleTag { TagId = tagId });
+            }
         }
 
+        await _articleRepo.UpdateAsync(article);
         return RedirectToAction("Details", new { id = model.Id });
     }
 
@@ -155,19 +162,24 @@ public class ArticleController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Details(Guid id)
     {
-        var article = await _articleRepo.GetArticleByArticleIdAsync(id);
+        var article = await _articleRepo.GetArticleByArticleIdAsync(id, includeAuthor: true);
         if (article == null) return NotFound();
-
-        var isAuthorized = User.IsInRole("Admin") ||
-                          User.IsInRole("Moderator") ||
-                          article.AuthorId == GetCurrentUserId();
 
         var model = new ArticleDetailsViewModel
         {
             Article = article,
-            CanEdit = isAuthorized,
-            CanDelete = isAuthorized
+            CanEdit = false,
+            CanDelete = false
         };
+
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var isAuthorized = User.IsInRole("Admin") ||
+                             User.IsInRole("Moderator") ||
+                             article.AuthorId == GetCurrentUserId();
+            model.CanEdit = isAuthorized;
+            model.CanDelete = isAuthorized;
+        }
 
         return View(model);
     }

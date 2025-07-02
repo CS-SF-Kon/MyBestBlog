@@ -22,7 +22,7 @@ public interface IArticleRepository : IRepository<Article>
     /// </summary>
     /// <param name="articleId"></param>
     /// <returns></returns>
-    Task<Article?> GetArticleByArticleIdAsync(Guid articleId);
+    Task<Article?> GetArticleByArticleIdAsync(Guid articleId, bool includeAuthor = false, bool includeTags = false);
 
     /// <summary>
     /// проверка если статей нет (для создания тестовой статьи при первом запуске проекта)

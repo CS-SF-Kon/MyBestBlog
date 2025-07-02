@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using MyBestBlog.Core.Entities;
 using MyBestBlog.Core.Interfaces;
 using MyBestBlog.Web.Models;
@@ -56,5 +58,122 @@ public class UserController : Controller
         };
 
         return View(model);
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> Edit(Guid id)
+    {
+        var user = await _userRepo.GetUserByUserIdAsync(id);
+        if (user == null) return NotFound();
+
+        var currentUserId = GetCurrentUserId();
+        var isAdmin = User.IsInRole("Admin");
+
+        // Проверка прав
+        if (id != currentUserId && !isAdmin)
+        {
+            return Forbid();
+        }
+
+        var model = new UserEditViewModel
+        {
+            Id = user.Id,
+            DisplayName = user.DisplayName,
+            Email = user.Email,
+            Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault()
+        };
+
+        if (isAdmin)
+        {
+            model.AvailableRoles = new List<SelectListItem>
+        {
+            new("Пользователь", "User"),
+            new("Модератор", "Moderator"),
+            new("Администратор", "Admin")
+        };
+        }
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(UserEditViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            if (User.IsInRole("Admin"))
+            {
+                model.AvailableRoles = GetAvailableRoles();
+            }
+            return View(model);
+        }
+
+        var user = await _userRepo.GetUserByUserIdAsync(model.Id);
+        if (user == null) return NotFound();
+
+        var currentUserId = GetCurrentUserId();
+        var isAdmin = User.IsInRole("Admin");
+
+        // Проверка прав
+        if (model.Id != currentUserId && !isAdmin)
+        {
+            return Forbid();
+        }
+
+        // Обновляем основные данные
+        user.DisplayName = model.DisplayName;
+        user.Email = model.Email;
+        user.UserName = model.Email; // Для Identity userName обычно совпадает с email
+
+        // Обновляем пароль, если указан
+        if (!string.IsNullOrEmpty(model.NewPassword))
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+        }
+
+        // Обновляем роль (только для админа)
+        if (isAdmin && !string.IsNullOrEmpty(model.Role))
+        {
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            await _userManager.RemoveFromRolesAsync(user, currentRoles);
+            await _userManager.AddToRoleAsync(user, model.Role);
+        }
+
+        await _userManager.UpdateAsync(user);
+        return RedirectToAction("Profile", new { id = model.Id });
+    }
+
+    private List<SelectListItem> GetAvailableRoles()
+    {
+        return new List<SelectListItem>
+        {
+            new("Пользователь", "User"),
+            new("Модератор", "Moderator"),
+            new("Администратор", "Admin")
+        };
+    }
+
+    protected Guid GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (Guid.TryParse(userIdClaim, out var userId))
+        {
+            return userId;
+        }
+
+        throw new UnauthorizedAccessException("User ID is invalid or not found");
     }
 }

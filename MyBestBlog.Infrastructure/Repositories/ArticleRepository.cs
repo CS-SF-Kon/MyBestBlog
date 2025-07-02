@@ -19,9 +19,22 @@ public class ArticleRepository : BaseRepository<Article>, IArticleRepository
         return await _context.Set<Article>().ToListAsync();
     }
 
-    public async Task<Article?> GetArticleByArticleIdAsync(Guid articleId)
+    public async Task<Article?> GetArticleByArticleIdAsync(Guid articleId, bool includeAuthor = false, bool includeTags = false)
     {
-        return await _context.Set<Article>().FindAsync(articleId);
+        var query = _context.Articles.AsQueryable();
+
+        if (includeAuthor)
+        {
+            query = query.Include(a => a.Author);
+        }
+
+        if (includeTags)
+        {
+            query = query.Include(a => a.Tags)
+                        .ThenInclude(at => at.Tag);
+        }
+
+        return await query.FirstOrDefaultAsync(a => a.Id == articleId);
     }
 
     public async Task<IEnumerable<Article>> GetArticlesByUserIdAsync(Guid userId)
