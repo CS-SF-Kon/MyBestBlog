@@ -10,7 +10,10 @@ public class TagRepository : BaseRepository<Tag>, ITagRepository
     public TagRepository(BlogDbContext context) : base(context) { }
     public async Task<IEnumerable<Tag?>> GetAllTagsAsync()
     {
-        return await _context.Set<Tag>().ToListAsync();
+        return await _context.Tags
+            .Include(t => t.Articles)
+            .ThenInclude(at => at.Article)
+            .ToListAsync();
     }
 
     public async Task<Tag?> GetTagByTagIdAsync(Guid tagId)

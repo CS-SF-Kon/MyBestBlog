@@ -18,7 +18,11 @@
 
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <small class="text-muted">
-                    Автор: @Model.Article.Author?.UserName
+                    Автор: 
+                    <a asp-controller="User" asp-action="Profile"
+                       asp-route-id="@Model.Article.Author?.Id" class="text-decoration-none">
+                        @Model.Article.Author?.UserName
+                    </a>
                 </small>
                 <small class="text-muted">
                     @Model.Article.CreatedAt.ToString("dd.MM.yyyy HH:mm")
@@ -46,6 +50,56 @@
                 <a asp-controller="Home" asp-action="Index" class="btn btn-secondary ms-auto">
                     На главную
                 </a>
+            </div>
+
+            @if (User.Identity.IsAuthenticated)
+            {
+                <div class="mt-4">
+                    <h4>Добавить комментарий</h4>
+                    <form asp-controller="Article" asp-action="AddComment" method="post">
+                        <input type="hidden" asp-for="NewComment.ArticleId" value="@Model.Article.Id" />
+                        <div class="form-group mb-2">
+                            <textarea asp-for="NewComment.Text" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="NewComment.Text" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Отправить</button>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info mt-4">
+                    <a asp-controller="Auth" asp-action="Login">Войдите</a>, чтобы оставить комментарий
+                </div>
+            }
+
+            <!-- Список комментариев -->
+            <div class="mt-4">
+                <h4>Комментарии (@Model.Comments.Count)</h4>
+                @if (Model.Comments.Any())
+                {
+                    <div class="list-group mt-3">
+                        @foreach (var comment in Model.Comments)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <strong>
+                                        <a asp-controller="User" asp-action="Profile"
+                                           asp-route-id="@comment.AuthorId">
+                                            @comment.AuthorName
+                                        </a>
+                                    </strong>
+                                    <small class="text-muted">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                                </div>
+                                <p class="mb-1 mt-2">@comment.Text</p>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">Комментариев пока нет</p>
+                }
             </div>
         </div>
     </div>

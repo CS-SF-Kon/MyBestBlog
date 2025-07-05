@@ -6,6 +6,7 @@ using MyBestBlog.Infrastructure.Repositories;
 using MyBestBlog.Services.Interfaces;
 using System.Security.Claims;
 using MyBestBlog.Web.Models;
+using System.Xml.Linq;
 
 namespace MyBestBlog.Web.Controllers;
 
@@ -14,11 +15,13 @@ public class ArticleController : Controller
 {
     private readonly IArticleRepository _articleRepo;
     private readonly ITagRepository _tagRepo;
+    private readonly ICommentRepository _commentRepo;
 
-    public ArticleController(IArticleRepository articleRepo, ITagRepository tagRepo)
+    public ArticleController(IArticleRepository articleRepo, ITagRepository tagRepo, ICommentRepository commentRepo)
     {
         _articleRepo = articleRepo;
         _tagRepo = tagRepo;
+        _commentRepo = commentRepo;
     }
 
     protected Guid GetCurrentUserId()
@@ -165,9 +168,20 @@ public class ArticleController : Controller
         var article = await _articleRepo.GetArticleByArticleIdAsync(id, includeAuthor: true);
         if (article == null) return NotFound();
 
+        var comments = await _commentRepo.GetCommentsForArticleAsync(id);
+
         var model = new ArticleDetailsViewModel
         {
             Article = article,
+            Comments = comments.Select(c => new CommentViewModel
+            {
+                Id = c.Id,
+                Text = c.Text,
+                CreatedAt = c.CreatedAt,
+                AuthorName = c.Author.UserName,
+                AuthorId = c.Author.Id
+            }).ToList(),
+            NewComment = new AddCommentViewModel { ArticleId = id },
             CanEdit = false,
             CanDelete = false
         };
@@ -182,5 +196,48 @@ public class ArticleController : Controller
         }
 
         return View(model);
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> AddComment(AddCommentViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            // Возвращаем на страницу с текущими данными
+            var article = await _articleRepo.GetArticleByArticleIdAsync(model.ArticleId, includeAuthor: true);
+            if (article == null) return NotFound();
+
+            var comments = await _commentRepo.GetCommentsForArticleAsync(model.ArticleId);
+
+            var viewModel = new ArticleDetailsViewModel
+            {
+                Article = article,
+                Comments = comments.Select(c => new CommentViewModel
+                {
+                    Id = c.Id,
+                    Text = c.Text,
+                    CreatedAt = c.CreatedAt,
+                    AuthorName = c.Author.UserName,
+                    AuthorId = c.Author.Id
+                }).ToList(),
+                NewComment = model, // Сохраняем введённые данные
+                CanEdit = false,
+                CanDelete = false
+            };
+
+            return View("Details", viewModel);
+        }
+
+        var comment = new Comment
+        {
+            Text = model.Text,
+            ArticleId = model.ArticleId,
+            AuthorId = GetCurrentUserId(),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _commentRepo.AddAsync(comment);
+        return RedirectToAction("Details", new { id = model.ArticleId });
     }
 }

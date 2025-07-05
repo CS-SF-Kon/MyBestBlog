@@ -16,4 +16,11 @@ public interface ICommentRepository : IRepository<Comment>
     /// <param name="commentId"></param>
     /// <returns></returns>
     Task<Comment?> GetCommentByCommentIdAsync(Guid commentId);
+
+    /// <summary>
+    /// получить все Комментарии по Id Статьи
+    /// </summary>
+    /// <param name="articleId"></param>
+    /// <returns></returns>
+    Task<IEnumerable<Comment>> GetCommentsForArticleAsync(Guid articleId);
 }

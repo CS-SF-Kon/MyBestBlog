@@ -42,7 +42,10 @@
                                 <p class="card-text">@tag.Description</p>
                             }
                             <small class="text-muted">
-                                Статей: @tag.Articles?.Count ?? 0
+                                @{
+                                    var articleCount = tag.Articles?.Count ?? 0;
+                                }
+                                Статей: @articleCount
                             </small>
                         </div>
                     </div>

@@ -33,7 +33,7 @@ public class UserController : Controller
         var currentUserIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!Guid.TryParse(currentUserIdClaim, out var currentUserId))
         {
-            return Forbid(); // или другая обработка ошибки
+            return Forbid();
         }
         var isAdmin = User.IsInRole("Admin");
 
@@ -143,7 +143,6 @@ public class UserController : Controller
             }
         }
 
-        // Обновляем роль (только для админа)
         if (isAdmin && !string.IsNullOrEmpty(model.Role))
         {
             var currentRoles = await _userManager.GetRolesAsync(user);

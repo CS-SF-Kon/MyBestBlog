@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿    using Microsoft.EntityFrameworkCore;
 using MyBestBlog.Core.Entities;
 using MyBestBlog.Core.Interfaces;
 using MyBestBlog.Infrastructure.Data;
@@ -17,5 +17,14 @@ public class CommentRepository : BaseRepository<Comment>, ICommentRepository
     public async Task<Comment?> GetCommentByCommentIdAsync(Guid commentId)
     {
         return await _context.Set<Comment>().FindAsync(commentId);
+    }
+
+    public async Task<IEnumerable<Comment>> GetCommentsForArticleAsync(Guid articleId)
+    {
+        return await _context.Comments
+            .Where(c => c.ArticleId == articleId)
+            .Include(c => c.Author)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
     }
 }

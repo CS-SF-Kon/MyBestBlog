@@ -41,6 +41,8 @@ public class ArticleRepository : BaseRepository<Article>, IArticleRepository
     {
         return await _context.Articles
             .Where(article => article.AuthorId == userId)
+            .Include(article => article.Tags)
+            .ThenInclude(article => article.Tag)
             .OrderByDescending(article => article.CreatedAt)
             .ToListAsync();
     }

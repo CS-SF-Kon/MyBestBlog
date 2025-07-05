@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyBestBlog.Core.Entities;
@@ -14,47 +15,87 @@ public class HomeController : Controller
     private readonly IArticleRepository _articleRepo;
     private readonly BlogDbContext _context;
     private readonly IUserRepository _userRepo;
+    private readonly UserManager<User> _userManager;
 
-    public HomeController(ILogger<HomeController> logger, IArticleRepository articleRepo, BlogDbContext context, IUserRepository userRepo)
+    public HomeController(ILogger<HomeController> logger, IArticleRepository articleRepo, BlogDbContext context, IUserRepository userRepo, UserManager<User> userManager)
     {
         _logger = logger;
         _articleRepo = articleRepo;
         _context = context;
         _userRepo = userRepo;
+        _userManager = userManager;
     }
 
     public async Task<IActionResult> Index(Guid? tagId)
     {
-        List<Article> articles;
+        IQueryable<Article> query = _context.Articles
+            .Include(a => a.Tags)
+            .ThenInclude(t => t.Tag)
+            .Include(a => a.Author); // Добавляем загрузку автора
 
         if (tagId.HasValue)
         {
-            // Получаем статьи по тегу
-            articles = await _context.Articles
-                .Include(a => a.Tags)
-                .ThenInclude(t => t.Tag)
-                .Where(a => a.Tags.Any(t => t.TagId == tagId.Value))
-                .ToListAsync();
-
+            query = query.Where(a => a.Tags.Any(t => t.TagId == tagId.Value));
             ViewData["CurrentTag"] = await _context.Tags
                 .FirstOrDefaultAsync(t => t.Id == tagId.Value);
         }
-        else
-        {
-            // Получаем все статьи (оригинальная логика)
-            articles = await _context.Articles
-                .Include(a => a.Tags)
-                .ThenInclude(t => t.Tag)
-                .ToListAsync();
-        }
 
-        return View(articles);
+        var articles = await query.ToListAsync();
+
+        var viewModels = articles.Select(a => new ArticlePreviewViewModel
+        {
+            Id = a.Id,
+            Title = a.Title,
+            PreviewContent = a.Content.Length > 100
+                ? a.Content.Substring(0, 100) + "..."
+                : a.Content,
+            CreatedAt = a.CreatedAt,
+            Tags = a.Tags?.Select(t => new ArticlePreviewViewModel.TagInfo
+            {
+                Id = t.Tag.Id,
+                Name = t.Tag.Name
+            }).ToList() ?? new List<ArticlePreviewViewModel.TagInfo>(),
+            Author = new ArticlePreviewViewModel.AuthorInfo
+            {
+                Id = a.Author.Id,
+                UserName = a.Author.UserName
+            }
+        }).ToList();
+
+        return View(viewModels);
     }
 
     public async Task<IActionResult> Users()
     {
-        var users = await _userRepo.GetAllUsersAsync();
-        return View(users);
+        // Получаем пользователей с включенными статьями
+        var users = await _context.Users
+            .Include(u => u.Articles) // Включаем статьи
+            .ThenInclude(a => a.Tags) // Включаем теги статей, если нужно
+            .ThenInclude(at => at.Tag)
+            .ToListAsync();
+
+        var viewModels = new List<UserListViewModel>();
+
+        foreach (var user in users)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            var viewModel = new UserListViewModel
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Role = roles.FirstOrDefault() ?? "User",
+                Articles = user.Articles?.Select(a => new UserArticleViewModel
+                {
+                    Id = a.Id,
+                    Title = a.Title,
+                    Tags = a.Tags?.Select(t => t.Tag.Name).ToList() ?? new List<string>()
+                }).ToList() ?? new List<UserArticleViewModel>()
+            };
+
+            viewModels.Add(viewModel);
+        }
+
+        return View(viewModels);
     }
 
     //public IActionResult Privacy() - можно будет удалить, наверное
