@@ -1,5 +1,8 @@
 ﻿namespace MyBestBlog.Web.Models;
 
+/// <summary>
+/// Модель для предпросмотра Статьи на главной странице или при поиске по Тегу
+/// </summary>
 public class ArticlePreviewViewModel
 {
     public Guid Id { get; set; }

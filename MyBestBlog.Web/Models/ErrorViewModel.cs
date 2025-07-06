@@ -1,5 +1,8 @@
 namespace MyBestBlog.Web.Models;
 
+/// <summary>
+/// Модель для ошибок
+/// </summary>
 public class ErrorViewModel
 {
     public string? RequestId { get; set; }

@@ -26,12 +26,17 @@ public class HomeController : Controller
         _userManager = userManager;
     }
 
+    /// <summary>
+    /// Главная страница с перечнем статей
+    /// </summary>
+    /// <param name="tagId"></param>
+    /// <returns></returns>
     public async Task<IActionResult> Index(Guid? tagId)
     {
         IQueryable<Article> query = _context.Articles
             .Include(a => a.Tags)
             .ThenInclude(t => t.Tag)
-            .Include(a => a.Author); // Добавляем загрузку автора
+            .Include(a => a.Author);
 
         if (tagId.HasValue)
         {
@@ -65,12 +70,15 @@ public class HomeController : Controller
         return View(viewModels);
     }
 
+    /// <summary>
+    /// Перечень всех пользователей блога
+    /// </summary>
+    /// <returns></returns>
     public async Task<IActionResult> Users()
     {
-        // Получаем пользователей с включенными статьями
         var users = await _context.Users
-            .Include(u => u.Articles) // Включаем статьи
-            .ThenInclude(a => a.Tags) // Включаем теги статей, если нужно
+            .Include(u => u.Articles)
+            .ThenInclude(a => a.Tags)
             .ThenInclude(at => at.Tag)
             .ToListAsync();
 
@@ -98,11 +106,10 @@ public class HomeController : Controller
         return View(viewModels);
     }
 
-    //public IActionResult Privacy() - можно будет удалить, наверное
-    //{
-    //    return View();
-    //}
-
+    /// <summary>
+    /// Отработка ошибок
+    /// </summary>
+    /// <returns></returns>
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

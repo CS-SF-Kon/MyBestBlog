@@ -1,5 +1,8 @@
 ﻿namespace MyBestBlog.Web.Models;
 
+/// <summary>
+/// Модель для просмотра профиля Пользователя
+/// </summary>
 public class UserProfileViewModel
 {
     public Guid UserId { get; set; }
@@ -12,6 +15,9 @@ public class UserProfileViewModel
     public bool CanEdit { get; set; }
 }
 
+/// <summary>
+/// Модель для статей Пользователя на странице его профиля
+/// </summary>
 public class UserArticleViewModel
 {
     public Guid Id { get; set; }

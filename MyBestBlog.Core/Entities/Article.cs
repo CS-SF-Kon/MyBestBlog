@@ -1,7 +1,7 @@
 ﻿namespace MyBestBlog.Core.Entities;
 
 /// <summary>
-/// класс сущности Article 
+/// класс сущности Статья 
 /// </summary>
 public class Article
 {

@@ -15,6 +15,11 @@ public class ErrorController : Controller
         _logger = logger;
     }
 
+    /// <summary>
+    /// Обработка известных ошибок - 403, 404
+    /// </summary>
+    /// <param name="statusCode"></param>
+    /// <returns></returns>
     [Route("Error/{statusCode:int}")]
     public IActionResult HttpStatusCodeHandler(int statusCode)
     {
@@ -36,6 +41,10 @@ public class ErrorController : Controller
         };
     }
 
+    /// <summary>
+    /// Обработка остальных ошибок
+    /// </summary>
+    /// <returns></returns>
     [Route("Error")]
     public IActionResult HandleError()
     {

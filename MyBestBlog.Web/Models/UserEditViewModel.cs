@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MyBestBlog.Web.Models;
 
+/// <summary>
+/// Модель для редактирования данных профиля Пользователя
+/// </summary>
 public class UserEditViewModel
 {
     public Guid Id { get; set; }

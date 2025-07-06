@@ -1,5 +1,8 @@
 ﻿namespace MyBestBlog.Web.Models;
 
+/// <summary>
+/// Модель для просмотра перечня Пользователей
+/// </summary>
 public class UserListViewModel
 {
     public Guid Id { get; set; }

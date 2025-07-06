@@ -37,19 +37,6 @@ namespace MyBestBlog.Web
                 logger.LogInformation($"Service: {svc.ServiceType.FullName}");
             }
 
-            //using (var scope = app.Services.CreateScope()) // была проблема с ArticleRepository и ArticleController, проверял
-            //{
-            //    try
-            //    {
-            //        var repo = scope.ServiceProvider.GetRequiredService<IArticleRepository>();
-            //        Console.WriteLine("ArticleRepository успешно разрешён!"); 
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        Console.WriteLine($"Ошибка: {ex.Message}");
-            //    }
-            //}
-
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
@@ -95,7 +82,7 @@ namespace MyBestBlog.Web
                 var tagRepo = scope.ServiceProvider.GetRequiredService<ITagRepository>();
                 var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
-                var roles = new[] { "User", "Moderator", "Admin" }; // три роли
+                var roles = new[] { "User", "Moderator", "Admin" }; // три роли (захардкоденные)
                 foreach (var role in roles)
                 {
                     if (!await roleManager.RoleExistsAsync(role))

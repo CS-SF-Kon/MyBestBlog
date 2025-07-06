@@ -15,6 +15,10 @@ public class TagController : Controller
         _tagRepo = tagRepo;
     }
 
+    /// <summary>
+    /// Вывод всех тегов блога
+    /// </summary>
+    /// <returns></returns>
     [AllowAnonymous]
     public async Task<IActionResult> All()
     {
@@ -27,32 +31,46 @@ public class TagController : Controller
         return View(model);
     }
 
-    [Authorize(Roles = "Admin,Moderator")]
-    public IActionResult Create()
-    {
-        return View("Edit", new TagCreateViewModel());
-    }
+    /// <summary>
+    /// Создание тега - представление. Лишнее - создание тега реализовано в Edit при условии отсутствия параметров
+    /// </summary>
+    /// <returns></returns>
+    //[Authorize(Roles = "Admin,Moderator")]
+    //public IActionResult Create()
+    //{
+    //    return View("Edit", new TagCreateViewModel());
+    //}
 
-    [HttpPost]
-    [Authorize(Roles = "Admin,Moderator")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(TagCreateViewModel model)
-    {
-        if (!ModelState.IsValid)
-        {
-            return View(model);
-        }
+    /// <summary>
+    /// Создание тега - отработка POST. Лишнее - создание тега реализовано в Edit при условии отсутствия параметров
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
+    //[HttpPost]
+    //[Authorize(Roles = "Admin,Moderator")]
+    //[ValidateAntiForgeryToken]
+    //public async Task<IActionResult> Create(TagCreateViewModel model)
+    //{
+    //    if (!ModelState.IsValid)
+    //    {
+    //        return View(model);
+    //    }
 
-        var tag = new Tag
-        {
-            Name = model.Name,
-            Description = model.Description
-        };
+    //    var tag = new Tag
+    //    {
+    //        Name = model.Name,
+    //        Description = model.Description
+    //    };
 
-        await _tagRepo.AddAsync(tag);
-        return RedirectToAction("All");
-    }
+    //    await _tagRepo.AddAsync(tag);
+    //    return RedirectToAction("All");
+    //}
 
+    /// <summary>
+    /// Создание и редактирование тега - представление
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [Authorize(Roles = "Admin,Moderator")]
     public async Task<IActionResult> Edit(Guid? id)
     {
@@ -72,6 +90,11 @@ public class TagController : Controller
         });
     }
 
+    /// <summary>
+    /// Создание и редактирование тега - отработка POST
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
     [HttpPost]
     public async Task<IActionResult> Edit(TagCreateViewModel model)
     {

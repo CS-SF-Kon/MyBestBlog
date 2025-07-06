@@ -2,6 +2,9 @@
 
 namespace MyBestBlog.Web.Models;
 
+/// <summary>
+/// Модель создания Тега
+/// </summary>
 public class TagCreateViewModel
 {
     public Guid Id { get; set; }

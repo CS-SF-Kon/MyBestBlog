@@ -23,6 +23,11 @@ public class AuthController : Controller
         _signInManager = signInManager;
     }
 
+    /// <summary>
+    /// Авторизация - представление
+    /// </summary>
+    /// <param name="returnUrl"></param>
+    /// <returns></returns>
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -30,6 +35,13 @@ public class AuthController : Controller
         return View();
     }
 
+    /// <summary>
+    /// Авторизация - отработка POST
+    /// </summary>
+    /// <param name="email"></param>
+    /// <param name="password"></param>
+    /// <param name="returnUrl"></param>
+    /// <returns></returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
@@ -58,12 +70,23 @@ public class AuthController : Controller
         return View();
     }
 
+    /// <summary>
+    /// Регистрация - представление
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
     public IActionResult Register()
     {
         return View();
     }
 
+    /// <summary>
+    /// Регистрация - отработка POST
+    /// </summary>
+    /// <param name="email"></param>
+    /// <param name="password"></param>
+    /// <param name="confirmPassword"></param>
+    /// <returns></returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(
@@ -95,6 +118,10 @@ public class AuthController : Controller
         return View();
     }
 
+    /// <summary>
+    /// Выход
+    /// </summary>
+    /// <returns></returns>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()

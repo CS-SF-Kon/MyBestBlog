@@ -2,6 +2,9 @@
 
 namespace MyBestBlog.Web.Models;
 
+/// <summary>
+/// Модель для создания новой Статьи
+/// </summary>
 public class ArticleCreateViewModel
 {
     public Guid Id { get; set; }
@@ -17,6 +20,9 @@ public class ArticleCreateViewModel
     public List<TagViewModel> AvailableTags { get; set; } = new();
 }
 
+/// <summary>
+/// Модель для Тегов к Статье
+/// </summary>
 public class TagViewModel
 {
     public Guid Id { get; set; }

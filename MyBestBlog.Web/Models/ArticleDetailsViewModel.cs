@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MyBestBlog.Web.Models;
 
+/// <summary>
+/// Модель для просмотра Статьи
+/// </summary>
 public class ArticleDetailsViewModel
 {
     public Article Article { get; set; }
@@ -12,6 +15,9 @@ public class ArticleDetailsViewModel
     public AddCommentViewModel NewComment { get; set; } = new();
 }
 
+/// <summary>
+/// Модель для загрузки Комментариев к Статье
+/// </summary>
 public class CommentViewModel
 {
     public Guid Id { get; set; }
@@ -21,6 +27,9 @@ public class CommentViewModel
     public Guid AuthorId { get; set; }
 }
 
+/// <summary>
+/// Модель для добавления комментария
+/// </summary>
 public class AddCommentViewModel
 {
     [Required]

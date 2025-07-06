@@ -24,6 +24,12 @@ public class UserController : Controller
         _articleRepo = articleRepo;
         _userManager = userManager;
     }
+
+    /// <summary>
+    /// Просмотр профиля пользователя
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet]
     public async Task<IActionResult> Profile(Guid id)
     {
@@ -60,6 +66,11 @@ public class UserController : Controller
         return View(model);
     }
 
+    /// <summary>
+    /// Редактирование профиля пользователя - представление
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> Edit(Guid id)
@@ -70,7 +81,6 @@ public class UserController : Controller
         var currentUserId = GetCurrentUserId();
         var isAdmin = User.IsInRole("Admin");
 
-        // Проверка прав
         if (id != currentUserId && !isAdmin)
         {
             return View("../Error/Forbidden");
@@ -97,6 +107,11 @@ public class UserController : Controller
         return View(model);
     }
 
+    /// <summary>
+    /// Редактирование профиля пользователя - отработка POST
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
@@ -117,18 +132,15 @@ public class UserController : Controller
         var currentUserId = GetCurrentUserId();
         var isAdmin = User.IsInRole("Admin");
 
-        // Проверка прав
         if (model.Id != currentUserId && !isAdmin)
         {
             return View("../Error/Forbidden");
         }
 
-        // Обновляем основные данные
         user.DisplayName = model.DisplayName;
         user.Email = model.Email;
-        user.UserName = model.Email; // Для Identity userName обычно совпадает с email
+        user.UserName = model.Email;
 
-        // Обновляем пароль, если указан
         if (!string.IsNullOrEmpty(model.NewPassword))
         {
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -143,7 +155,7 @@ public class UserController : Controller
             }
         }
 
-        if (isAdmin && !string.IsNullOrEmpty(model.Role))
+        if (isAdmin && !string.IsNullOrEmpty(model.Role)) // смена роли, доступная только админу
         {
             var currentRoles = await _userManager.GetRolesAsync(user);
             await _userManager.RemoveFromRolesAsync(user, currentRoles);
@@ -154,6 +166,10 @@ public class UserController : Controller
         return RedirectToAction("Profile", new { id = model.Id });
     }
 
+    /// <summary>
+    /// Достпуные для блога роли (да, захардкодено)
+    /// </summary>
+    /// <returns></returns>
     private List<SelectListItem> GetAvailableRoles()
     {
         return new List<SelectListItem>
@@ -164,6 +180,11 @@ public class UserController : Controller
         };
     }
 
+    /// <summary>
+    /// Получение Id пользователя текущей сессии - для создания статей, комментариев, проверки на авторство на странице статьи (дубилруется с таким же методом в UserController)
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="UnauthorizedAccessException"></exception>
     protected Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);

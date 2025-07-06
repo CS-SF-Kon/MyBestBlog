@@ -24,6 +24,11 @@ public class ArticleController : Controller
         _commentRepo = commentRepo;
     }
 
+    /// <summary>
+    /// Получение Id пользователя текущей сессии - для создания статей, комментариев, проверки на авторство на странице статьи (дубилруется с таким же методом в ArticleController)
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="UnauthorizedAccessException"></exception>
     protected Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -60,6 +65,10 @@ public class ArticleController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    /// <summary>
+    /// Создание статьи - представление
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
     public async Task<IActionResult> Create()
     {
@@ -75,6 +84,11 @@ public class ArticleController : Controller
         return View(model);
     }
 
+    /// <summary>
+    /// Создание статьи - отработка POST
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
     public async Task<IActionResult> Create(ArticleCreateViewModel model)
     {
         if (!ModelState.IsValid)
@@ -100,6 +114,11 @@ public class ArticleController : Controller
         return RedirectToAction("Details", new { id = article.Id });
     }
 
+    /// <summary>
+    /// Редактирование статьи - представление
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [Authorize]
     public async Task<IActionResult> Edit(Guid id)
     {
@@ -129,6 +148,11 @@ public class ArticleController : Controller
         return View(model);
     }
 
+    /// <summary>
+    /// Редактирование статьи - отработка POST
+    /// </summary>
+    /// <param name="model"></param>
+    /// <returns></returns>
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Edit(ArticleCreateViewModel model)
@@ -161,6 +185,11 @@ public class ArticleController : Controller
         return RedirectToAction("Details", new { id = model.Id });
     }
 
+    /// <summary>
+    /// Просмотр статьи
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet]
     [AllowAnonymous]
     public async Task<IActionResult> Details(Guid id)
@@ -198,6 +227,12 @@ public class ArticleController : Controller
         return View(model);
     }
 
+    /// <summary>
+    /// Добавление комментария
+    /// </summary>
+    /// <param name="ArticleId"></param>
+    /// <param name="Text"></param>
+    /// <returns></returns>
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
