@@ -28,12 +28,12 @@ public class UserController : Controller
     public async Task<IActionResult> Profile(Guid id)
     {
         var user = await _userRepo.GetUserByUserIdAsync(id);
-        if (user == null) return NotFound();
+        if (user == null) return View("../Error/Forbidden");
 
         var currentUserIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!Guid.TryParse(currentUserIdClaim, out var currentUserId))
         {
-            return Forbid();
+            return View("../Error/Forbidden");
         }
         var isAdmin = User.IsInRole("Admin");
 
@@ -65,7 +65,7 @@ public class UserController : Controller
     public async Task<IActionResult> Edit(Guid id)
     {
         var user = await _userRepo.GetUserByUserIdAsync(id);
-        if (user == null) return NotFound();
+        if (user == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
         var currentUserId = GetCurrentUserId();
         var isAdmin = User.IsInRole("Admin");
@@ -73,7 +73,7 @@ public class UserController : Controller
         // Проверка прав
         if (id != currentUserId && !isAdmin)
         {
-            return Forbid();
+            return View("../Error/Forbidden");
         }
 
         var model = new UserEditViewModel
@@ -112,7 +112,7 @@ public class UserController : Controller
         }
 
         var user = await _userRepo.GetUserByUserIdAsync(model.Id);
-        if (user == null) return NotFound();
+        if (user == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
         var currentUserId = GetCurrentUserId();
         var isAdmin = User.IsInRole("Admin");
@@ -120,7 +120,7 @@ public class UserController : Controller
         // Проверка прав
         if (model.Id != currentUserId && !isAdmin)
         {
-            return Forbid();
+            return View("../Error/Forbidden");
         }
 
         // Обновляем основные данные

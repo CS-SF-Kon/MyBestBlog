@@ -52,16 +52,24 @@ namespace MyBestBlog.Web
 
             if (!app.Environment.IsDevelopment())
             {
-                app.UseExceptionHandler("/Home/Error");
+                app.UseExceptionHandler("/Error");
                 app.UseHsts();
             }
+
+            app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
+
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.MapControllerRoute(
+                name: "articleComment",
+                pattern: "Article/AddComment",
+                defaults: new { controller = "Article", action = "AddComment" });
 
             app.MapControllerRoute(
                 name: "default",
@@ -72,17 +80,13 @@ namespace MyBestBlog.Web
                 pattern: "auth/{action=Login}",
                 defaults: new { controller = "Auth" });
 
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
-
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
                 db.Database.Migrate(); // реализованы миграции на случай дополнения БД
             }
 
-            using (var scope = app.Services.CreateScope()) // доабвление тестовых пользователей Админ, Модератор и Тестовый Пользователь
+            using (var scope = app.Services.CreateScope()) // добавление тестовых пользователей Админ, Модератор и Тестовый Пользователь
             {
                 var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();

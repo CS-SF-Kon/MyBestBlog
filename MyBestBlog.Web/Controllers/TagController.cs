@@ -62,7 +62,7 @@ public class TagController : Controller
         }
 
         var tag = await _tagRepo.GetTagByTagIdAsync(id.Value);
-        if (tag == null) return NotFound();
+        if (tag == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
         return View(new TagCreateViewModel
         {

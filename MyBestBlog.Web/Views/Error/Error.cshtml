@@ -1,0 +1,35 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Ошибка";
+}
+
+<div class="container text-center mt-5">
+    <h1 class="display-4 text-danger">Ошибка @Model.StatusCode</h1>
+
+    @if (Model.ShowErrorMessage)
+    {
+        <h2>@Model.ErrorMessage</h2>
+    }
+    else
+    {
+        <h2>Произошла непредвиденная ошибка</h2>
+    }
+
+    @if (Model.ShowPath)
+    {
+        <p class="text-muted">Запрос: @Model.Path</p>
+    }
+
+    @if (User.IsInRole("Admin") && Model.Exception != null)
+    {
+        <div class="alert alert-danger mt-4 text-start">
+            <h5>Техническая информация (только для администраторов):</h5>
+            <p>@Model.Exception.Message</p>
+            <pre>@Model.Exception.StackTrace</pre>
+        </div>
+    }
+
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">
+        На главную
+    </a>
+</div>

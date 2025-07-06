@@ -46,14 +46,14 @@ public class ArticleController : Controller
     public async Task<IActionResult> Delete(Guid id)
     {
         var article = await _articleRepo.GetArticleByArticleIdAsync(id);
-        if (article == null) return NotFound();
+        if (article == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
         var isAdmin = User.IsInRole("Admin");
         var isAuthor = article.AuthorId.ToString() == User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (!isAdmin && !isAuthor)
         {
-            return Forbid();
+            return View("../Error/Forbidden");
         }
 
         await _articleRepo.DeleteAsync(article);
@@ -104,11 +104,11 @@ public class ArticleController : Controller
     public async Task<IActionResult> Edit(Guid id)
     {
         var article = await _articleRepo.GetArticleByArticleIdAsync(id, includeTags: true);
-        if (article == null) return NotFound();
+        if (article == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
         if (!User.IsInRole("Admin") && !User.IsInRole("Moderator") && article.AuthorId != GetCurrentUserId())
         {
-            return Forbid();
+            return View("../Error/Forbidden");
         }
 
         var allTags = await _tagRepo.GetAllTagsAsync();
@@ -142,7 +142,7 @@ public class ArticleController : Controller
         }
 
         var article = await _articleRepo.GetArticleByArticleIdAsync(model.Id, includeTags: true);
-        if (article == null) return NotFound();
+        if (article == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
         article.Title = model.Title;
         article.Content = model.Content;
@@ -166,7 +166,7 @@ public class ArticleController : Controller
     public async Task<IActionResult> Details(Guid id)
     {
         var article = await _articleRepo.GetArticleByArticleIdAsync(id, includeAuthor: true);
-        if (article == null) return NotFound();
+        if (article == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
         var comments = await _commentRepo.GetCommentsForArticleAsync(id);
 
@@ -200,44 +200,25 @@ public class ArticleController : Controller
 
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> AddComment(AddCommentViewModel model)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddComment(
+    [FromForm] Guid ArticleId,
+    [FromForm] string Text)
     {
         if (!ModelState.IsValid)
         {
-            // Возвращаем на страницу с текущими данными
-            var article = await _articleRepo.GetArticleByArticleIdAsync(model.ArticleId, includeAuthor: true);
-            if (article == null) return NotFound();
-
-            var comments = await _commentRepo.GetCommentsForArticleAsync(model.ArticleId);
-
-            var viewModel = new ArticleDetailsViewModel
-            {
-                Article = article,
-                Comments = comments.Select(c => new CommentViewModel
-                {
-                    Id = c.Id,
-                    Text = c.Text,
-                    CreatedAt = c.CreatedAt,
-                    AuthorName = c.Author.UserName,
-                    AuthorId = c.Author.Id
-                }).ToList(),
-                NewComment = model, // Сохраняем введённые данные
-                CanEdit = false,
-                CanDelete = false
-            };
-
-            return View("Details", viewModel);
+            return RedirectToAction("Details", new { id = ArticleId });
         }
 
         var comment = new Comment
         {
-            Text = model.Text,
-            ArticleId = model.ArticleId,
+            Text = Text,
+            ArticleId = ArticleId,
             AuthorId = GetCurrentUserId(),
             CreatedAt = DateTime.UtcNow
         };
 
         await _commentRepo.AddAsync(comment);
-        return RedirectToAction("Details", new { id = model.ArticleId });
+        return RedirectToAction("Details", new { id = ArticleId });
     }
 }
