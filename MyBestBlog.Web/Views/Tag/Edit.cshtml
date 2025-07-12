@@ -6,7 +6,7 @@
 
 <h1>@ViewData["Title"]</h1>
 
-<form asp-action="@(Model.Id == Guid.Empty ? "Create" : "Edit")" method="post">
+<form asp-action="Edit" method="post">
     @if (Model.Id != Guid.Empty)
     {
         <input type="hidden" asp-for="Id" />

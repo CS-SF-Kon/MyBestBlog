@@ -236,24 +236,22 @@ public class ArticleController : Controller
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddComment(
-    [FromForm] Guid ArticleId,
-    [FromForm] string Text)
+    public async Task<IActionResult> AddComment(AddCommentViewModel model)
     {
         if (!ModelState.IsValid)
         {
-            return RedirectToAction("Details", new { id = ArticleId });
+            return RedirectToAction("Details", new { id = model.ArticleId });
         }
 
         var comment = new Comment
         {
-            Text = Text,
-            ArticleId = ArticleId,
+            Text = model.Text,
+            ArticleId = model.ArticleId,
             AuthorId = GetCurrentUserId(),
             CreatedAt = DateTime.UtcNow
         };
 
         await _commentRepo.AddAsync(comment);
-        return RedirectToAction("Details", new { id = ArticleId });
+        return RedirectToAction("Details", new { id = model.ArticleId });
     }
 }

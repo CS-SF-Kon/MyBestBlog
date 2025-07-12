@@ -96,17 +96,25 @@ public class TagController : Controller
     /// <param name="model"></param>
     /// <returns></returns>
     [HttpPost]
+    [Authorize(Roles = "Admin,Moderator")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(TagCreateViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
 
         if (model.Id == Guid.Empty) // Создание
         {
-            await _tagRepo.AddAsync(new Tag { Name = model.Name, Description = model.Description });
+            var tag = new Tag { Name = model.Name, Description = model.Description };
+            await _tagRepo.AddAsync(tag);
         }
         else // Редактирование
         {
             var tag = await _tagRepo.GetTagByTagIdAsync(model.Id);
+            if (tag == null) return NotFound();
+
             tag.Name = model.Name;
             tag.Description = model.Description;
             await _tagRepo.UpdateAsync(tag);
