@@ -35,7 +35,7 @@ public class AddCommentViewModel
     [Required]
     public Guid ArticleId { get; set; }
 
-    [Required(ErrorMessage = "Комментарий не может быть пустым")]
-    [StringLength(1000, ErrorMessage = "Комментарий не должен превышать 1000 символов")]
+    //[Required(ErrorMessage = "Комментарий не может быть пустым")] - не работает
+    //[StringLength(1000, ErrorMessage = "Комментарий не должен превышать 1000 символов")] - не работает
     public string Text { get; set; }
 }

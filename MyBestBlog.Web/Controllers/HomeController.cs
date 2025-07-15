@@ -33,6 +33,8 @@ public class HomeController : Controller
     /// <returns></returns>
     public async Task<IActionResult> Index(Guid? tagId)
     {
+        _logger.LogInformation("User visited main page");
+
         IQueryable<Article> query = _context.Articles
             .Include(a => a.Tags)
             .ThenInclude(t => t.Tag)
@@ -76,6 +78,8 @@ public class HomeController : Controller
     /// <returns></returns>
     public async Task<IActionResult> Users()
     {
+        _logger.LogInformation("User is browsing other users");
+
         var users = await _context.Users
             .Include(u => u.Articles)
             .ThenInclude(a => a.Tags)

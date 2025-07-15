@@ -14,15 +14,18 @@ public class UserController : Controller
     private readonly IUserRepository _userRepo;
     private readonly IArticleRepository _articleRepo;
     private readonly UserManager<User> _userManager;
+    private readonly ILogger<UserController> _logger;
 
     public UserController(
         IUserRepository userRepo,
         IArticleRepository articleRepo,
-        UserManager<User> userManager)
+        UserManager<User> userManager,
+        ILogger<UserController> logger)
     {
         _userRepo = userRepo;
         _articleRepo = articleRepo;
         _userManager = userManager;
+        _logger = logger;
     }
 
     /// <summary>
@@ -33,6 +36,8 @@ public class UserController : Controller
     [HttpGet]
     public async Task<IActionResult> Profile(Guid id)
     {
+        _logger.LogInformation("User views a profile");
+
         var user = await _userRepo.GetUserByUserIdAsync(id);
         if (user == null) return View("../Error/Forbidden");
 
@@ -83,8 +88,12 @@ public class UserController : Controller
 
         if (id != currentUserId && !isAdmin)
         {
+            _logger.LogInformation("Unauthorised user just tried to edit user profile");
+
             return View("../Error/Forbidden");
         }
+
+        _logger.LogInformation("Authorised user trying to edit user profile");
 
         var model = new UserEditViewModel
         {
@@ -161,6 +170,8 @@ public class UserController : Controller
             await _userManager.RemoveFromRolesAsync(user, currentRoles);
             await _userManager.AddToRoleAsync(user, model.Role);
         }
+
+        _logger.LogInformation("Authorised user just edited user profile");
 
         await _userManager.UpdateAsync(user);
         return RedirectToAction("Profile", new { id = model.Id });

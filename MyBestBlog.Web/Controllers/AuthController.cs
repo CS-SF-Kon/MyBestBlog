@@ -12,15 +12,18 @@ public class AuthController : Controller
     private readonly IAuthService _authService;
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IAuthService authService,
         UserManager<User> userManager,
-        SignInManager<User> signInManager)
+        SignInManager<User> signInManager,
+        ILogger<AuthController> logger)
     {
         _authService = authService;
         _userManager = userManager;
         _signInManager = signInManager;
+        _logger = logger;
     }
 
     /// <summary>
@@ -31,6 +34,8 @@ public class AuthController : Controller
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
     {
+        _logger.LogInformation("User trying to sign in");
+
         ViewData["ReturnUrl"] = returnUrl;
         return View();
     }
@@ -67,6 +72,8 @@ public class AuthController : Controller
             ModelState.AddModelError(string.Empty, "Неверный email или пароль");
         }
 
+        _logger.LogInformation("User just signed in");
+
         return View();
     }
 
@@ -77,6 +84,8 @@ public class AuthController : Controller
     [HttpGet]
     public IActionResult Register()
     {
+        _logger.LogInformation("New user trying to sign up");
+
         return View();
     }
 
@@ -115,6 +124,8 @@ public class AuthController : Controller
             ModelState.AddModelError(string.Empty, error.Description);
         }
 
+        _logger.LogInformation("New user just signed up");
+
         return View();
     }
 
@@ -126,6 +137,8 @@ public class AuthController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
+        _logger.LogInformation("User just signed out");
+
         await _signInManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
     }

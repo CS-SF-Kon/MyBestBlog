@@ -6,6 +6,9 @@ using MyBestBlog.Infrastructure.Data;
 using MyBestBlog.Infrastructure.Repositories;
 using MyBestBlog.Services.Implementations;
 using MyBestBlog.Services.Interfaces;
+using NLog.Web;
+using System.Diagnostics;
+using System.Security.Claims;
 
 namespace MyBestBlog.Web
 {
@@ -13,132 +16,152 @@ namespace MyBestBlog.Web
     {
         public static async Task Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
 
-            builder.Services.AddControllersWithViews();
-
-            builder.Services.AddIdentity<User, IdentityRole<Guid>>()
-                .AddEntityFrameworkStores<BlogDbContext>()
-                .AddDefaultTokenProviders();
-
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
-            builder.Services.AddScoped<ITagRepository, TagRepository>();
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
-            builder.Services.AddScoped<ICommentRepository, CommentRepository>();
-
-            builder.Services.AddDbContext<BlogDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            var app = builder.Build();
-
-            var logger = app.Services.GetRequiredService<ILogger<Program>>(); // полное логгирование 
-            foreach (var svc in builder.Services)
+            try
             {
-                logger.LogInformation($"Service: {svc.ServiceType.FullName}");
-            }
 
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Error");
-                app.UseHsts();
-            }
+                var builder = WebApplication.CreateBuilder(args);
 
-            app.UseStatusCodePagesWithReExecute("/Error/{0}");
+                builder.Logging.ClearProviders();
+                builder.Host.UseNLog();
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+                builder.Services.AddControllersWithViews();
 
-            app.UseRouting();
+                builder.Services.AddIdentity<User, IdentityRole<Guid>>()
+                    .AddEntityFrameworkStores<BlogDbContext>()
+                    .AddDefaultTokenProviders();
 
-            app.UseAuthentication();
-            app.UseAuthorization();
 
-            app.MapControllerRoute(
-                name: "articleComment",
-                pattern: "Article/AddComment",
-                defaults: new { controller = "Article", action = "AddComment" });
+                builder.Services.AddScoped<IAuthService, AuthService>();
+                builder.Services.AddScoped<IArticleRepository, ArticleRepository>();
+                builder.Services.AddScoped<ITagRepository, TagRepository>();
+                builder.Services.AddScoped<IUserRepository, UserRepository>();
+                builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                builder.Services.AddDbContext<BlogDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            app.MapControllerRoute(
-                name: "auth",
-                pattern: "auth/{action=Login}",
-                defaults: new { controller = "Auth" });
+                var app = builder.Build();
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
-                db.Database.Migrate(); // реализованы миграции на случай дополнения БД
-            }
+                //var logger = app.Services.GetRequiredService<ILogger<Program>>(); // полное логгирование 
+                //foreach (var svc in builder.Services)
+                //{
+                //    logger.LogInformation($"Service: {svc.ServiceType.FullName}");
+                //}
 
-            using (var scope = app.Services.CreateScope()) // добавление тестовых пользователей Админ, Модератор и Тестовый Пользователь
-            {
-                var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
-
-                var articleRepo = scope.ServiceProvider.GetRequiredService<IArticleRepository>();
-                var tagRepo = scope.ServiceProvider.GetRequiredService<ITagRepository>();
-                var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-
-                var roles = new[] { "User", "Moderator", "Admin" }; // три роли (захардкоденные)
-                foreach (var role in roles)
+                if (!app.Environment.IsDevelopment())
                 {
-                    if (!await roleManager.RoleExistsAsync(role))
-                        await roleManager.CreateAsync(new IdentityRole<Guid>(role));
+                    app.UseExceptionHandler("/Error");
+                    app.UseHsts();
                 }
 
-                var adminEmail = "admin@example.com";
-                var adminPassword = "Admin123!";
-                if (!await authService.EmailAlreadyExists(adminEmail))
+                app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
+                app.UseHttpsRedirection();
+                app.UseStaticFiles();
+
+                app.UseRouting();
+
+                app.UseAuthentication();
+                app.UseAuthorization();
+
+
+                app.MapControllerRoute(
+                    name: "articleComment",
+                    pattern: "Article/{articleId}/AddComment",
+                    defaults: new { controller = "Article", action = "AddComment" });
+
+                app.MapControllerRoute(
+                    name: "auth",
+                    pattern: "Auth/{action=Login}",
+                    defaults: new { controller = "Auth" });
+
+                app.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+                using (var scope = app.Services.CreateScope())
                 {
-                    await authService.RegisterAsync(
-                        email: adminEmail,
-                        password: adminPassword,
-                        role: "Admin");
+                    var db = scope.ServiceProvider.GetRequiredService<BlogDbContext>();
+                    db.Database.Migrate(); // реализованы миграции на случай дополнения БД
                 }
 
-                var testUserEmail = "testUser@example.com";
-                var testUserPassword = "TestUser123!";
-                if (!await authService.EmailAlreadyExists(testUserEmail))
+                using (var scope = app.Services.CreateScope()) // добавление тестовых пользователей Админ, Модератор и Тестовый Пользователь
                 {
-                    await authService.RegisterAsync(
-                        email: testUserEmail,
-                        password: testUserPassword);
-                    // роль тестовому пользователю должна будет стать User умолчанию, как и всем регистрирующимся
-                }
+                    var authService = scope.ServiceProvider.GetRequiredService<IAuthService>();
+                    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
-                var moderatorEmail = "moderator@example.com";
-                var moderatorPassword = "Moder123!";
-                if (!await authService.EmailAlreadyExists(moderatorEmail))
-                {
-                    await authService.RegisterAsync(
-                        email: moderatorEmail,
-                        password: moderatorPassword,
-                        role: "Moderator");
-                }
+                    var articleRepo = scope.ServiceProvider.GetRequiredService<IArticleRepository>();
+                    var tagRepo = scope.ServiceProvider.GetRequiredService<ITagRepository>();
+                    var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
-                if (!await articleRepo.AnyAsync())
-                {
-                    var admin = await userRepo.GetUserByUserEmailAsync(adminEmail);
-                    var testTag = new Tag { Name = "ASP.NET Core", Description = "Статьи по ASP.NET" };
-
-                    await tagRepo.AddAsync(testTag);
-
-                    var testArticle = new Article
+                    var roles = new[] { "User", "Moderator", "Admin" }; // три роли (захардкоденные)
+                    foreach (var role in roles)
                     {
-                        Title = "Первая тестовая статья",
-                        Content = "Это содержимое тестовой статьи...",
-                        AuthorId = admin.Id, 
-                        Tags = new List<ArticleTag> { new() { Tag = testTag } }
-                    };
+                        if (!await roleManager.RoleExistsAsync(role))
+                            await roleManager.CreateAsync(new IdentityRole<Guid>(role));
+                    }
 
-                    await articleRepo.AddAsync(testArticle);
+                    var adminEmail = "admin@example.com";
+                    var adminPassword = "Admin123!";
+                    if (!await authService.EmailAlreadyExists(adminEmail))
+                    {
+                        await authService.RegisterAsync(
+                            email: adminEmail,
+                            password: adminPassword,
+                            role: "Admin");
+                    }
+
+                    var testUserEmail = "testUser@example.com";
+                    var testUserPassword = "TestUser123!";
+                    if (!await authService.EmailAlreadyExists(testUserEmail))
+                    {
+                        await authService.RegisterAsync(
+                            email: testUserEmail,
+                            password: testUserPassword);
+                        // роль тестовому пользователю должна будет стать User умолчанию, как и всем регистрирующимся
+                    }
+
+                    var moderatorEmail = "moderator@example.com";
+                    var moderatorPassword = "Moder123!";
+                    if (!await authService.EmailAlreadyExists(moderatorEmail))
+                    {
+                        await authService.RegisterAsync(
+                            email: moderatorEmail,
+                            password: moderatorPassword,
+                            role: "Moderator");
+                    }
+
+                    if (!await articleRepo.AnyAsync())
+                    {
+                        var admin = await userRepo.GetUserByUserEmailAsync(adminEmail);
+                        var testTag = new Tag { Name = "ASP.NET Core", Description = "Статьи по ASP.NET" };
+
+                        await tagRepo.AddAsync(testTag);
+
+                        var testArticle = new Article
+                        {
+                            Title = "Первая тестовая статья",
+                            Content = "Это содержимое тестовой статьи...",
+                            AuthorId = admin.Id,
+                            Tags = new List<ArticleTag> { new() { Tag = testTag } }
+                        };
+
+                        await articleRepo.AddAsync(testArticle);
+                    }
                 }
-            }
 
-            app.Run();
+                app.Run();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Stopped program because of exception");
+                throw;
+            }
+            finally
+            {
+                NLog.LogManager.Shutdown();
+            }
         }
     }
 }

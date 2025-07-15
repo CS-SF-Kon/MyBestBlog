@@ -9,10 +9,12 @@ namespace MyBestBlog.Web.Controllers;
 public class TagController : Controller
 {
     private readonly ITagRepository _tagRepo;
+    private readonly ILogger<TagController> _logger;
 
-    public TagController(ITagRepository tagRepo)
+    public TagController(ITagRepository tagRepo, ILogger<TagController> logger)
     {
         _tagRepo = tagRepo;
+        _logger = logger;
     }
 
     /// <summary>
@@ -22,6 +24,8 @@ public class TagController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> All()
     {
+        _logger.LogInformation("User browsing all tags of blog");
+
         var tags = await _tagRepo.GetAllTagsAsync();
         var model = new TagListViewModel
         {
@@ -76,11 +80,15 @@ public class TagController : Controller
     {
         if (id == null)
         {
+            _logger.LogInformation("User trying to create a tag");
+
             return View(new TagCreateViewModel());
         }
 
         var tag = await _tagRepo.GetTagByTagIdAsync(id.Value);
         if (tag == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
+
+        _logger.LogInformation("User trying to edit a tag");
 
         return View(new TagCreateViewModel
         {
@@ -107,11 +115,15 @@ public class TagController : Controller
 
         if (model.Id == Guid.Empty) // Создание
         {
+            _logger.LogInformation("User just created a tag");
+
             var tag = new Tag { Name = model.Name, Description = model.Description };
             await _tagRepo.AddAsync(tag);
         }
         else // Редактирование
         {
+            _logger.LogInformation("User just edited a tag");
+
             var tag = await _tagRepo.GetTagByTagIdAsync(model.Id);
             if (tag == null) return NotFound();
 

@@ -56,11 +56,14 @@
             {
                 <div class="mt-4">
                     <h4>Добавить комментарий</h4>
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger">@TempData["Error"]</div>
+                    }
                     <form asp-controller="Article" asp-action="AddComment" method="post">
-                        <input type="hidden" asp-for="NewComment.ArticleId" />
+                        <input type="hidden" name="ArticleId" value="@Model.Article.Id" />
                         <div class="form-group mb-2">
-                            <textarea asp-for="NewComment.Text" class="form-control" rows="3"></textarea>
-                            <span asp-validation-for="NewComment.Text" class="text-danger"></span>
+                            <textarea name="Text" class="form-control" rows="3"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Отправить</button>
                         @Html.AntiForgeryToken()

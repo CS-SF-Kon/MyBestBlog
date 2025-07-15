@@ -1,4 +1,5 @@
-﻿    using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MyBestBlog.Core.Entities;
 using MyBestBlog.Core.Interfaces;
 using MyBestBlog.Infrastructure.Data;
@@ -7,7 +8,12 @@ namespace MyBestBlog.Infrastructure.Repositories;
 
 public class CommentRepository : BaseRepository<Comment>, ICommentRepository
 {
-    public CommentRepository(BlogDbContext context) : base(context) { }
+    private readonly ILogger<CommentRepository> _logger;
+
+    public CommentRepository(BlogDbContext context, ILogger<CommentRepository> logger) : base(context)
+    {
+        _logger = logger;
+    }
 
     public async Task<IEnumerable<Comment>> GetAllCommentsAsync()
     {
@@ -26,5 +32,21 @@ public class CommentRepository : BaseRepository<Comment>, ICommentRepository
             .Include(c => c.Author)
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
+    }
+
+    public override async Task AddAsync(Comment entity)
+    {
+        try
+        {
+            _logger.LogDebug("Добавление комментария в БД: {@Comment}", entity);
+            await _context.Set<Comment>().AddAsync(entity);
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Комментарий сохранен в БД. ID: {Id}", entity.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка сохранения комментария");
+            throw;
+        }
     }
 }

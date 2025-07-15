@@ -16,12 +16,14 @@ public class ArticleController : Controller
     private readonly IArticleRepository _articleRepo;
     private readonly ITagRepository _tagRepo;
     private readonly ICommentRepository _commentRepo;
+    private readonly ILogger<ArticleController> _logger;
 
-    public ArticleController(IArticleRepository articleRepo, ITagRepository tagRepo, ICommentRepository commentRepo)
+    public ArticleController(IArticleRepository articleRepo, ITagRepository tagRepo, ICommentRepository commentRepo, ILogger<ArticleController> logger)
     {
         _articleRepo = articleRepo;
         _tagRepo = tagRepo;
         _commentRepo = commentRepo;
+        _logger = logger;
     }
 
     /// <summary>
@@ -50,6 +52,8 @@ public class ArticleController : Controller
     [Authorize(Roles = "Admin,Moderator")]
     public async Task<IActionResult> Delete(Guid id)
     {
+        _logger.LogInformation("User just deleted an article");
+
         var article = await _articleRepo.GetArticleByArticleIdAsync(id);
         if (article == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
@@ -72,6 +76,8 @@ public class ArticleController : Controller
     [HttpGet]
     public async Task<IActionResult> Create()
     {
+        _logger.LogInformation("User trying to wrote an article");
+
         var tags = await _tagRepo.GetAllTagsAsync();
         var model = new ArticleCreateViewModel
         {
@@ -98,6 +104,8 @@ public class ArticleController : Controller
                 .ToList();
             return View(model);
         }
+
+        _logger.LogInformation("User just wrote an article");
 
         var article = new Article
         {
@@ -127,8 +135,13 @@ public class ArticleController : Controller
 
         if (!User.IsInRole("Admin") && !User.IsInRole("Moderator") && article.AuthorId != GetCurrentUserId())
         {
+            _logger.LogInformation("Unautorised user tried to edit an article");
+
             return View("../Error/Forbidden");
         }
+
+        _logger.LogInformation("User trying to edit an article");
+
 
         var allTags = await _tagRepo.GetAllTagsAsync();
 
@@ -165,6 +178,8 @@ public class ArticleController : Controller
             return View(model);
         }
 
+        _logger.LogInformation("User just edited an article");
+
         var article = await _articleRepo.GetArticleByArticleIdAsync(model.Id, includeTags: true);
         if (article == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
@@ -194,6 +209,8 @@ public class ArticleController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Details(Guid id)
     {
+        _logger.LogInformation("User reads an article");
+
         var article = await _articleRepo.GetArticleByArticleIdAsync(id, includeAuthor: true);
         if (article == null) return RedirectToAction("HttpStatusCodeHandler", "Error", new { statusCode = 404 });
 
@@ -236,22 +253,37 @@ public class ArticleController : Controller
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddComment(AddCommentViewModel model)
+    public async Task<IActionResult> AddComment(
+    [FromForm] Guid ArticleId,
+    [FromForm] string Text)
     {
+        // Ручная валидация, потому что по-нормальному не работает, всё испробовал
+        if (string.IsNullOrWhiteSpace(Text))
+        {
+            ModelState.AddModelError("Text", "Комментарий не может быть пустым");
+        }
+        else if (Text.Length > 1000)
+        {
+            ModelState.AddModelError("Text", "Комментарий не должен превышать 1000 символов");
+        }
+
         if (!ModelState.IsValid)
         {
-            return RedirectToAction("Details", new { id = model.ArticleId });
+            TempData["Error"] = ModelState["Text"]?.Errors.FirstOrDefault()?.ErrorMessage;
+            return RedirectToAction("Details", new { id = ArticleId });
         }
+
+        _logger.LogInformation("User just wrote an comment");
 
         var comment = new Comment
         {
-            Text = model.Text,
-            ArticleId = model.ArticleId,
+            Text = Text,
+            ArticleId = ArticleId,
             AuthorId = GetCurrentUserId(),
             CreatedAt = DateTime.UtcNow
         };
 
         await _commentRepo.AddAsync(comment);
-        return RedirectToAction("Details", new { id = model.ArticleId });
+        return RedirectToAction("Details", new { id = ArticleId });
     }
 }
