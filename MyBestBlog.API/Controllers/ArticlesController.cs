@@ -29,6 +29,11 @@ public class ArticlesController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Получение Id пользователя текущей сессии
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="UnauthorizedAccessException"></exception>
     private Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,7 +44,10 @@ public class ArticlesController : ControllerBase
         throw new UnauthorizedAccessException("User ID is invalid or not found");
     }
 
-    // GET: api/articles
+    /// <summary>
+    /// Получение всех статей блога
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<ArticleDto>>> GetAllArticles()
@@ -67,7 +75,11 @@ public class ArticlesController : ControllerBase
         }));
     }
 
-    // GET: api/articles/{id}
+    /// <summary>
+    /// Получение данных о статье по её Id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet("{id}")]
     [AllowAnonymous]
     public async Task<ActionResult<ArticleDetailsDto>> GetArticleByArticleId(Guid id)
@@ -114,7 +126,11 @@ public class ArticlesController : ControllerBase
         });
     }
 
-    // POST: api/articles
+    /// <summary>
+    /// Создание статьи
+    /// </summary>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     [HttpPost]
     public async Task<ActionResult<ArticleDto>> CreateArticle([FromBody] CreateArticleDto dto)
     {
@@ -149,7 +165,12 @@ public class ArticlesController : ControllerBase
         });
     }
 
-    // PUT: api/articles/{id}
+    /// <summary>
+    /// Редактирование статьи
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateArticle(Guid id, [FromBody] UpdateArticleDto dto)
     {
@@ -183,7 +204,11 @@ public class ArticlesController : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/articles/{id}
+    /// <summary>
+    /// Удаление статьи
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin,Moderator")]
     public async Task<IActionResult> DeleteArticle(Guid id)
@@ -207,7 +232,12 @@ public class ArticlesController : ControllerBase
         return NoContent();
     }
 
-    // POST: api/articles/{id}/comments
+    /// <summary>
+    /// Добавление комментария
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     [HttpPost("{id}/comments")]
     public async Task<ActionResult<CommentDto>> AddComment(Guid id, [FromBody] AddCommentDto dto)
     {

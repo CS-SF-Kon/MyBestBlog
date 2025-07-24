@@ -36,41 +36,6 @@ public class TagController : Controller
     }
 
     /// <summary>
-    /// Создание тега - представление. Лишнее - создание тега реализовано в Edit при условии отсутствия параметров
-    /// </summary>
-    /// <returns></returns>
-    //[Authorize(Roles = "Admin,Moderator")]
-    //public IActionResult Create()
-    //{
-    //    return View("Edit", new TagCreateViewModel());
-    //}
-
-    /// <summary>
-    /// Создание тега - отработка POST. Лишнее - создание тега реализовано в Edit при условии отсутствия параметров
-    /// </summary>
-    /// <param name="model"></param>
-    /// <returns></returns>
-    //[HttpPost]
-    //[Authorize(Roles = "Admin,Moderator")]
-    //[ValidateAntiForgeryToken]
-    //public async Task<IActionResult> Create(TagCreateViewModel model)
-    //{
-    //    if (!ModelState.IsValid)
-    //    {
-    //        return View(model);
-    //    }
-
-    //    var tag = new Tag
-    //    {
-    //        Name = model.Name,
-    //        Description = model.Description
-    //    };
-
-    //    await _tagRepo.AddAsync(tag);
-    //    return RedirectToAction("All");
-    //}
-
-    /// <summary>
     /// Создание и редактирование тега - представление
     /// </summary>
     /// <param name="id"></param>

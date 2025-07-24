@@ -31,7 +31,10 @@ public class UsersController : ControllerBase
         _logger = logger;
     }
 
-    // GET: api/users
+    /// <summary>
+    /// Получение всех пользователей блога
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
     [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
@@ -68,7 +71,11 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
-    // GET: api/users/{id}
+    /// <summary>
+    /// Получение данных о пользователе по его Id
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet("{id}")]
     [AllowAnonymous]
     public async Task<ActionResult<UserDetailsDto>> GetUserByUserId(Guid id)
@@ -108,7 +115,12 @@ public class UsersController : ControllerBase
         });
     }
 
-    // PUT: api/users/{id}
+    /// <summary>
+    /// Изменение данных о пользователе
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="dto"></param>
+    /// <returns></returns>
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDto dto)
     {
@@ -124,7 +136,6 @@ public class UsersController : ControllerBase
             return Forbid();
         }
 
-        // Обновляем основные данные
         if (!string.IsNullOrEmpty(dto.DisplayName))
             user.DisplayName = dto.DisplayName;
 
@@ -134,7 +145,6 @@ public class UsersController : ControllerBase
             user.UserName = dto.Email;
         }
 
-        // Обновление пароля
         if (!string.IsNullOrEmpty(dto.NewPassword))
         {
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -164,6 +174,11 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Опять получение Id пользователя текущей сессии
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="UnauthorizedAccessException"></exception>
     private Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);

@@ -2,6 +2,9 @@
 
 namespace MyBestBlog.API.DTO;
 
+/// <summary>
+/// Краткая информация о пользователе
+/// </summary>
 public class UserDto
 {
     public Guid Id { get; set; }
@@ -12,12 +15,18 @@ public class UserDto
     public List<UserArticleDto> Articles { get; set; } = new();
 }
 
+/// <summary>
+/// Полная информация о пользователе
+/// </summary>
 public class UserDetailsDto : UserDto
 {
     public string Email { get; set; } = string.Empty;
     public bool CanEdit { get; set; }
 }
 
+/// <summary>
+/// Модель для редактирования данных о пользователе
+/// </summary>
 public class UpdateUserDto
 {
     [StringLength(50, ErrorMessage = "Не более 50 символов")]
@@ -32,10 +41,13 @@ public class UpdateUserDto
     [Compare("NewPassword", ErrorMessage = "Пароли не совпадают")]
     public string? ConfirmPassword { get; set; }
 
-    // Только для админа
+    // По идее должно быть доступно только для админов
     public string? Role { get; set; }
 }
 
+/// <summary>
+/// Краткая информация о статьях пользователя
+/// </summary>
 public class UserArticleDto
 {
     public Guid Id { get; set; }
